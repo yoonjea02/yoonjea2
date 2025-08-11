@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>검색</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="search">
+  <div class="wrap">
+    <header>
+      <div class="top-bar">
+        <div class="time">--:--</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="index.html">홈</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔍</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="page-grid">
+        <!-- LEFT: 검색 & 결과 -->
+        <section>
+          <h2 class="page-title">검색</h2>
+          <div class="toolbar">
+            <a class="pill active" href="#">전체</a>
+            <a class="pill" href="#" onclick="prefill('전기');return false;">전기</a>
+            <a class="pill" href="#" onclick="prefill('수도');return false;">수도</a>
+            <a class="pill" href="#" onclick="prefill('가스');return false;">가스</a>
+            <a class="pill" href="#" onclick="prefill('절약 팁');return false;">절약 팁</a>
+          </div>
+
+          <div class="search-box" style="margin-top:10px">
+            <form onsubmit="event.preventDefault(); doSearch();">
+              <input id="q" class="input" type="text" placeholder="검색어를 입력하세요 (예: 전기 절약 팁)" />
+            </form>
+            <div class="tags">
+              <button class="chip" onclick="prefill('누수 감지')">누수 감지</button>
+              <button class="chip" onclick="prefill('대기전력')">대기전력</button>
+              <button class="chip" onclick="prefill('여름 전기요금')">여름 전기요금</button>
+              <button class="chip" onclick="prefill('한달 관리비')">한달 관리비</button>
+            </div>
+          </div>
+
+          <div id="results" class="result-grid">
+            <div class="result-card">
+              <div class="kicker">추천</div>
+              <div class="title">검색 결과가 여기에 표시됩니다</div>
+              <div class="desc">키워드를 입력하거나 위 칩을 눌러보세요.</div>
+            </div>
+          </div>
+
+          <div id="empty" class="empty" style="display:none">
+            <span class="emoji">🔍</span>
+            <div>검색 결과가 없어요. 다른 키워드를 시도해 보세요.</div>
+          </div>
+        </section>
+
+        <!-- RIGHT: 사이드 제안/바로가기 -->
+        <aside class="aside-card">
+          <div>
+            <strong>추천 바로가기</strong>
+            <div class="kpi-rows" style="margin-top:8px">
+              <a class="kpi-tile" href="log.html"><div class="label">최근 로그</div><div class="value">보러가기</div></a>
+              <a class="kpi-tile" href="alerts.html"><div class="label">알림 센터</div><div class="value">보러가기</div></a>
+              <a class="kpi-tile" href="index.html#cost"><div class="label">요금 대시보드</div><div class="value">바로가기</div></a>
+              <a class="kpi-tile" href="#"><div class="label">절약 체크리스트</div><div class="value">열기</div></a>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <strong>최근 검색어</strong>
+            <div class="pills" style="margin-top:8px" id="recentKeywords">
+              <!-- JS로 채움 -->
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer>
+      <nav class="nav">
+        <a class="dot" href="index.html">🏠</a>
+        <a class="dot" href="index.html#cost">💡</a>
+        <a class="dot" href="log.html">📈</a>
+        <a class="dot" href="alerts.html">🔔</a>
+        <a class="dot" href="search.html">⚙️</a>
+      </nav>
+    </footer>
+  </div>
+
+  <script src="app.js" defer></script>
+  <script>
+    const recent = [];
+    function prefill(text){
+      const input = document.getElementById('q');
+      input.value = text;
+      input.focus();
+      doSearch();
+    }
+    function doSearch(){
+      const q = document.getElementById('q').value.trim();
+      const grid = document.getElementById('results');
+      const empty = document.getElementById('empty');
+
+      if(q && !recent.includes(q)){
+        recent.unshift(q); if(recent.length>6) recent.pop();
+        document.getElementById('recentKeywords').innerHTML =
+          recent.map(r=>`<a class="pill" href="#" onclick="prefill('${r}');return false;">${r}</a>`).join('');
+      }
+
+      if(!q){
+        grid.innerHTML = `
+          <div class="result-card">
+            <div class="kicker">추천</div>
+            <div class="title">검색 결과가 여기에 표시됩니다</div>
+            <div class="desc">키워드를 입력하거나 위 칩을 눌러보세요.</div>
+          </div>`;
+        empty.style.display = "none";
+        return;
+      }
+
+      const sample = [
+        { title:`‘${q}’ 관련 요약`, desc:`최근 한 달 간 ${q}에 대한 사용 로그 및 알림을 요약했습니다.` },
+        { title:`${q} 절약 팁 모음`, desc:`간단히 적용 가능한 체크리스트와 예상 절감 금액을 제공합니다.` },
+        { title:`${q} 이상 패턴 탐지`, desc:`이상치 탐지 규칙과 지난 발생 내역을 확인하세요.` },
+        { title:`${q} 대시보드 바로가기`, desc:`관련 위젯이 포함된 분석 화면으로 이동합니다.` },
+      ];
+
+      grid.innerHTML = sample.map(item => `
+        <div class="result-card">
+          <div class="kicker">결과</div>
+          <div class="title">${item.title}</div>
+          <div class="desc">${item.desc}</div>
+        </div>
+      `).join("");
+
+      empty.style.display = sample.length ? "none" : "block";
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>알림</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="alerts">
+  <div class="wrap">
+    <header>
+      <div class="top-bar">
+        <div class="time">--:--</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="index.html">홈</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔍</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="page-grid">
+        <!-- LEFT -->
+        <section>
+          <h2 class="page-title">알림</h2>
+          <div class="toolbar">
+            <a class="pill active" href="#">전체</a>
+            <a class="pill" href="#">요금</a>
+            <a class="pill" href="#">절약팁</a>
+            <a class="pill" href="#">시스템</a>
+          </div>
+
+          <div class="list grid-2" style="margin-top:10px">
+            <div class="list-item">
+              <div class="icon">⚡</div>
+              <div>
+                <p class="title">8월 전기요금이 지난달 대비 12% 감소했습니다.</p>
+                <div class="meta">방금 전 · 자동 분석</div>
+              </div>
+              <span class="badge ok">긍정</span>
+            </div>
+
+            <div class="list-item">
+              <div class="icon">🚿</div>
+              <div>
+                <p class="title">7월 수도요금이 예상보다 5% 높았습니다.</p>
+                <div class="meta">어제 · 예산 초과 위험</div>
+              </div>
+              <span class="badge warn">주의</span>
+            </div>
+
+            <div class="list-item">
+              <div class="icon">💡</div>
+              <div>
+                <p class="title">대기전력 절감: 멀티탭 스케줄 OFF 추천</p>
+                <div class="meta">2일 전 · 절약 팁</div>
+              </div>
+              <span class="badge info">팁</span>
+            </div>
+
+            <div class="list-item">
+              <div class="icon">🔧</div>
+              <div>
+                <p class="title">센서 연결 상태가 잠시 불안정했습니다.</p>
+                <div class="meta">3일 전 · 시스템</div>
+              </div>
+              <span class="badge info">알림</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT -->
+        <aside class="aside-card">
+          <div>
+            <strong>이번 달 알림 통계</strong>
+            <div class="kpi-rows" style="margin-top:8px">
+              <div class="kpi-tile"><div class="label">전체</div><div class="value">18</div></div>
+              <div class="kpi-tile"><div class="label">확인</div><div class="value">15</div></div>
+              <div class="kpi-tile"><div class="label">주의</div><div class="value">2</div></div>
+              <div class="kpi-tile"><div class="label">팁</div><div class="value">6</div></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <strong>빠른 필터</strong>
+            <div class="pills" style="margin-top:8px">
+              <a class="pill" href="#">미확인만</a>
+              <a class="pill" href="#">주의/경고</a>
+              <a class="pill" href="#">절약팁</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer>
+      <nav class="nav">
+        <a class="dot" href="index.html">🏠</a>
+        <a class="dot" href="index.html#cost">💡</a>
+        <a class="dot" href="log.html">📈</a>
+        <a class="dot" href="alerts.html">🔔</a>
+        <a class="dot" href="search.html">⚙️</a>
+      </nav>
+    </footer>
+  </div>
+  <script src="app3.js" defer></script>
+</body>
+</html>

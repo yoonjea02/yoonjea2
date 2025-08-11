@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>관리 요금 예측</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="home">
+  <div class="wrap">
+    <header>
+      <div class="top-bar">
+        <div class="time">--:--</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="log.html" aria-label="로그">로그</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔍</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="section">
+        <div class="profile">
+          <div class="avatar" aria-hidden="true">프로필</div>
+          <div class="greeting">
+            <p><strong>안녕하세요, 윤재님!</strong></p>
+            <p class="sub">좋은 하루 보내세요 ☀️</p>
+          </div>
+        </div>
+
+        <div class="summary" aria-label="이달 관리 요금 요약">
+          <h2>8월 예상 관리 요금 <span class="kpi" id="totalPrice">32,600 원</span></h2>
+          <p class="small" id="deltaText">지난달 보다 12% 낮은 금액이에요! ▼</p>
+          <div class="bars">
+            <div class="bar"><span class="label">7월</span><div class="track"><div class="fill july" style="width:60%"></div></div></div>
+            <div class="bar"><span class="label">8월</span><div class="track"><div class="fill aug"  style="width:90%"></div></div></div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>예상 관리 요금 한눈에 모아보기 &gt;</h3>
+          <div class="cards">
+            <article class="card">
+              <div class="label">예상 전기 요금</div>
+              <div class="kpi" id="elecPrice">13,830 원</div>
+              <div class="donut" style="--percent:42"><div class="center">전기 비중</div></div>
+            </article>
+            <article class="card">
+              <div class="label">예상 수도 요금</div>
+              <div class="kpi" id="waterPrice">7,820 원</div>
+              <div class="donut" style="--percent:24"><div class="center">수도 비중</div></div>
+            </article>
+          </div>
+        </div>
+      </section>
+      <!-- 절약 목표 카드 -->
+<section class="goal-card" aria-label="절약 목표">
+  <div class="goal-head">
+    <h3 class="goal-title">이번 달 절약 목표</h3>
+    <span id="goalHint" class="goal-meta">목표를 설정해 진행률을 확인해 보세요</span>
+  </div>
+
+  <div class="progress">
+    <div class="progress-track" aria-hidden="true">
+      <div id="goalFill" class="progress-fill" style="width:0%"></div>
+    </div>
+    <div class="progress-label">
+      <span id="savedNow">이번 달 절감액: 0 원</span>
+      <span id="goalPct">0%</span>
+    </div>
+  </div>
+
+  <form class="goal-form" id="goalForm">
+    <input id="goalInput" class="input" type="number" min="0" step="1000"
+           placeholder="목표 금액을 입력하세요 (예: 20,000)"
+           inputmode="numeric" />
+    <button type="submit" class="btn">저장</button>
+    <button type="button" id="goalClear" class="btn" style="background:#374151">초기화</button>
+    <div id="goalToast" class="goal-meta full" style="display:none">저장됨</div>
+  </form>
+
+  <div id="goalSuccess" style="display:none">
+    <span class="badge-success">🎉 목표 달성!</span>
+  </div>
+</section>
+
+    </main>
+
+    <footer>
+      <nav class="nav" aria-label="탭">
+        <a class="dot" href="index.html" title="홈">🏠</a>
+        <a class="dot" href="index.html#cost" title="요금">💡</a>
+        <a class="dot" href="log.html" title="분석/로그">📈</a>
+        <a class="dot" href="alerts.html" title="알림">🔔</a>
+        <a class="dot" href="search.html" title="설정/검색">⚙️</a>
+      </nav>
+    </footer>
+  </div>
+  <script src="app3.js" defer></script>
+</body>
+</html>

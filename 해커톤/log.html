@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>사용 로그</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="log">
+  <div class="wrap">
+    <header>
+      <div class="top-bar">
+        <div class="time">--:--</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="index.html">홈</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔍</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="section">
+      <div class="page-grid">
+        <!-- LEFT: 메인 리스트 -->
+        <section>
+          <h2 class="page-title">사용 로그</h2>
+          <div class="toolbar">
+            <a class="pill active" href="#">전체</a>
+            <a class="pill" href="#">전기</a>
+            <a class="pill" href="#">수도</a>
+            <a class="pill" href="#">가스</a>
+            <a class="pill" href="#">기타</a>
+          </div>
+
+          <div class="list grid-2" style="margin-top:10px">
+            <div class="list-item">
+              <div class="icon">⚡</div>
+              <div>
+                <p class="title">전기 요금 확인</p>
+                <div class="meta">2025-08-10 09:30 · iPhone</div>
+              </div>
+              <span class="badge info">조회</span>
+            </div>
+
+            <div class="list-item">
+              <div class="icon">🚿</div>
+              <div>
+                <p class="title">수도 요금 확인</p>
+                <div class="meta">2025-08-09 21:10 · Web</div>
+              </div>
+              <span class="badge info">조회</span>
+            </div>
+
+            <div class="list-item">
+              <div class="icon">📊</div>
+              <div>
+                <p class="title">관리비 요약 열람</p>
+                <div class="meta">2025-08-08 19:02 · Web</div>
+              </div>
+              <span class="badge ok">정상</span>
+            </div>
+
+            <div class="list-item">
+              <div class="icon">🔥</div>
+              <div>
+                <p class="title">가스 사용량 그래프 조회</p>
+                <div class="meta">2025-08-07 08:12 · Android</div>
+              </div>
+              <span class="badge info">조회</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT: 사이드 요약/필터 -->
+        <aside class="aside-card">
+          <div>
+            <strong>이번 주 활동 요약</strong>
+            <div class="kpi-rows" style="margin-top:8px">
+              <div class="kpi-tile"><div class="label">총 조회</div><div class="value">12</div></div>
+              <div class="kpi-tile"><div class="label">알림 확인</div><div class="value">7</div></div>
+              <div class="kpi-tile"><div class="label">이상탐지</div><div class="value">1</div></div>
+              <div class="kpi-tile"><div class="label">절약팁</div><div class="value">3</div></div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div>
+            <strong>빠른 필터</strong>
+            <div class="pills" style="margin-top:8px">
+              <a class="pill" href="#">오늘</a>
+              <a class="pill" href="#">이번 주</a>
+              <a class="pill" href="#">이번 달</a>
+              <a class="pill" href="#">이상만</a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+
+    <footer>
+      <nav class="nav">
+        <a class="dot" href="index.html">🏠</a>
+        <a class="dot" href="index.html#cost">💡</a>
+        <a class="dot" href="log.html">📈</a>
+        <a class="dot" href="alerts.html">🔔</a>
+        <a class="dot" href="search.html">⚙️</a>
+      </nav>
+    </footer>
+  </div>
+  <script src="app3.js" defer></script>
+</body>
+</html>
