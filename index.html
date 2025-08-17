@@ -3,103 +3,154 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>관리 요금 예측</title>
+  <title>관리 요금 예측 · 홈</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body data-page="home">
   <div class="wrap">
+
+    <!-- Header -->
     <header>
       <div class="top-bar">
-        <div class="time">--:--</div>
+        <div class="time">19:30</div>
         <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
       </div>
       <div class="top-actions">
         <a class="btn" href="log.html" aria-label="로그">로그</a>
         <div>
           <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
-          <a class="icon-btn" href="search.html" aria-label="검색">🔍</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
         </div>
       </div>
     </header>
 
-    <main>
-      <section class="section">
-        <div class="profile">
-          <div class="avatar" aria-hidden="true">프로필</div>
-          <div class="greeting">
-            <p><strong>안녕하세요, 윤재님!</strong></p>
-            <p class="sub">좋은 하루 보내세요 ☀️</p>
-          </div>
+    <!-- Main (홈 디자인 그대로 유지) -->
+    <main class="section stack">
+      <!-- 프로필 -->
+      <div class="hero" aria-label="프로필">
+        <div class="avatar" aria-hidden="true">👤</div>
+        <div>
+          <div class="name">@@@님</div>
+          <div class="email">aaa123@gmail.com</div>
         </div>
+      </div>
 
-        <div class="summary" aria-label="이달 관리 요금 요약">
-          <h2>8월 예상 관리 요금 <span class="kpi" id="totalPrice">32,600 원</span></h2>
-          <p class="small" id="deltaText">지난달 보다 12% 낮은 금액이에요! ▼</p>
-          <div class="bars">
-            <div class="bar"><span class="label">7월</span><div class="track"><div class="fill july" style="width:60%"></div></div></div>
-            <div class="bar"><span class="label">8월</span><div class="track"><div class="fill aug"  style="width:90%"></div></div></div>
+      <!-- 월 요약 -->
+      <section class="summary" aria-label="이달 관리 요금 요약">
+        <h2>@ @ @ 님의 8월 예상 관리 요금 <span class="kpi" id="totalPrice">32,600 원</span></h2>
+        <p class="small" id="deltaText">지난달 보다 12% 낮은 금액이에요!</p>
+        <div class="bars">
+          <div class="bar">
+            <span class="label">7월</span>
+            <div class="track"><div class="fill july" id="barJuly" style="width:60%"></div></div>
           </div>
-        </div>
-
-        <div class="panel">
-          <h3>예상 관리 요금 한눈에 모아보기 &gt;</h3>
-          <div class="cards">
-            <article class="card">
-              <div class="label">예상 전기 요금</div>
-              <div class="kpi" id="elecPrice">13,830 원</div>
-              <div class="donut" style="--percent:42"><div class="center">전기 비중</div></div>
-            </article>
-            <article class="card">
-              <div class="label">예상 수도 요금</div>
-              <div class="kpi" id="waterPrice">7,820 원</div>
-              <div class="donut" style="--percent:24"><div class="center">수도 비중</div></div>
-            </article>
+          <div class="bar">
+            <span class="label">8월</span>
+            <div class="track"><div class="fill aug" id="barAug" style="width:90%"></div></div>
           </div>
         </div>
       </section>
-      <!-- 절약 목표 카드 -->
-<section class="goal-card" aria-label="절약 목표">
-  <div class="goal-head">
-    <h3 class="goal-title">이번 달 절약 목표</h3>
-    <span id="goalHint" class="goal-meta">목표를 설정해 진행률을 확인해 보세요</span>
-  </div>
 
-  <div class="progress">
-    <div class="progress-track" aria-hidden="true">
-      <div id="goalFill" class="progress-fill" style="width:0%"></div>
-    </div>
-    <div class="progress-label">
-      <span id="savedNow">이번 달 절감액: 0 원</span>
-      <span id="goalPct">0%</span>
-    </div>
-  </div>
+      <!-- 카드: 전기/수도 -->
+      <section class="panel" aria-label="예상 관리 요금 한눈에">
+        <h3 style="margin:0 0 12px">예상 관리 요금 한눈에 모아보기 &gt;</h3>
+        <div class="cards">
+          <article class="card" aria-label="전기">
+            <div class="label">⚡ 예상 전기 요금</div>
+            <div class="kpi" id="elecPrice">13,830 원</div>
+            <div class="donut" id="donutElec" style="--percent:42"><div class="center">전기 비중</div></div>
+          </article>
+          <article class="card" aria-label="수도">
+            <div class="label">💧 예상 수도 요금</div>
+            <div class="kpi" id="waterPrice">7,820 원</div>
+            <div class="donut" id="donutWater" style="--percent:24"><div class="center">수도 비중</div></div>
+          </article>
+        </div>
+      </section>
 
-  <form class="goal-form" id="goalForm">
-    <input id="goalInput" class="input" type="number" min="0" step="1000"
-           placeholder="목표 금액을 입력하세요 (예: 20,000)"
-           inputmode="numeric" />
-    <button type="submit" class="btn">저장</button>
-    <button type="button" id="goalClear" class="btn" style="background:#374151">초기화</button>
-    <div id="goalToast" class="goal-meta full" style="display:none">저장됨</div>
-  </form>
+      <!-- 절약 목표 -->
+      <section class="goal-card" aria-label="절약 목표">
+        <div class="goal-head">
+          <h3 class="goal-title">이번 달 절약 목표</h3>
+          <span id="goalHint" class="goal-meta">목표를 설정해 진행률을 확인해 보세요</span>
+        </div>
 
-  <div id="goalSuccess" style="display:none">
-    <span class="badge-success">🎉 목표 달성!</span>
-  </div>
-</section>
+        <div class="progress">
+          <div class="progress-track"><div id="goalFill" class="progress-fill"></div></div>
+          <div class="progress-label">
+            <span id="savedNow">이번 달 절감액: 0 원</span>
+            <span id="goalPct">0%</span>
+          </div>
+        </div>
 
+        <form class="goal-form" id="goalForm">
+          <input id="goalInput" class="input" type="number" min="0" step="1000" placeholder="목표 금액을 입력하세요 (예: 30000)" />
+          <button type="submit" class="btn">저장</button>
+          <button type="button" id="goalClear" class="btn">초기화</button>
+        </form>
+
+        <div id="goalSuccess" style="display:none">
+          <span class="badge-success">목표 달성!</span>
+        </div>
+      </section>
     </main>
 
+    <!-- Footer Tabs -->
     <footer>
-      <nav class="nav" aria-label="탭">
-        <a class="dot" href="index.html" title="홈">🏠</a>
-        <a class="dot" href="index.html#cost" title="요금">💡</a>
-        <a class="dot" href="log.html" title="분석/로그">📈</a>
-        <a class="dot" href="alerts.html" title="알림">🔔</a>
-        <a class="dot" href="search.html" title="설정/검색">⚙️</a>
-      </nav>
+      <div class="tabs" aria-label="탭">
+        <a class="tab active" href="index.html" aria-label="홈">홈</a>
+        <a class="tab" href="analysis.html" aria-label="AI 분석">AI</a>
+        <a class="tab" href="goals.html" aria-label="실시간 요금">요금</a>
+        <a class="tab" href="profile.html" aria-label="마이페이지">마이</a>
+        <button class="tab" id="openDrawer2" type="button" aria-label="전체">전체</button>
+      </div>
     </footer>
   </div>
+
+  <!-- Drawer (✅ 홈에서도 공통 드로어로 교체) -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div>
+        <div class="d-name">@@@님</div>
+        <div class="d-email">aaa123@gmail.com</div>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+
+    <div class="d-hr"></div>
+    <div class="d-actions">
+      <a href="#">로그아웃</a>
+      <a href="#">탈퇴하기</a>
+    </div>
+  </aside>
+
+  <!-- Scripts -->
   <script src="app3.js" defer></script>
+  <script>
+    // Drawer (페이지 진입 시 닫힘 상태 보장)
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      if(!dr || !sc) return;
+      const open=()=>{ dr.classList.add('open'); sc.classList.add('show'); };
+      const close=()=>{ dr.classList.remove('open'); sc.classList.remove('show'); };
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      // 혹시 다른 페이지에서 열린 채 넘어오면 초기화
+      d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
 </body>
 </html>

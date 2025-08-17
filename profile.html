@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>마이페이지</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="settings">
+  <div class="wrap">
+    <!-- Header -->
+    <header>
+      <div class="top-bar">
+        <div class="time">19:34</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="index.html">홈</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="section">
+      <div class="settings-narrow">
+        <!-- 프로필 카드 (심플) -->
+        <section class="profile-hero">
+          <div class="avatar" aria-hidden="true">👤</div>
+          <div class="info">
+            <div class="name">@@@님</div>
+            <div class="email">aaa123@gmail.com</div>
+          </div>
+          <a href="#" class="btn-lite">프로필 편집</a>
+        </section>
+
+        <!-- 구분선 -->
+        <div class="hr"></div>
+
+        <!-- 메뉴 목록 (화살표 없이 깔끔, 예전 느낌) -->
+        <nav class="menu-list">
+          <a class="row" href="#"><span class="ico">👤</span><span class="title">정보 관리</span></a>
+          <a class="row" href="#"><span class="ico">⚙️</span><span class="title">환경설정</span></a>
+          <a class="row" href="alerts.html"><span class="ico">🔔</span><span class="title">알림</span></a>
+          <a class="row" href="#"><span class="ico">📢</span><span class="title">공지사항</span></a>
+          <a class="row" href="#"><span class="ico">💬</span><span class="title">문의사항</span></a>
+          <a class="row" href="#"><span class="ico">🛟</span><span class="title">고객센터</span></a>
+        </nav>
+
+        <!-- 위험 구역 (선택) -->
+        <section class="danger-simple">
+          <a href="#" class="btn-outline">로그아웃</a>
+          <a href="#" class="btn-danger">탈퇴하기</a>
+        </section>
+      </div>
+    </main>
+
+    <!-- Tabs -->
+    <footer>
+      <div class="tabs">
+        <a class="tab" href="index.html" aria-label="홈">홈</a>
+        <a class="tab" href="analysis.html" aria-label="AI 분석">AI</a>
+        <a class="tab" href="goals.html" aria-label="실시간 요금">요금</a>
+        <a class="tab active" href="profile.html" aria-label="마이페이지">마이</a>
+        <button class="tab" id="openDrawer2" type="button" aria-label="전체">전체</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Drawer (기본 닫힘) -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <!-- ✅ 홈과 동일한 드로어 콘텐츠 -->
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div>
+        <div class="d-name">@@@님</div>
+        <div class="d-email">aaa123@gmail.com</div>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+
+    <div class="d-hr"></div>
+    <div class="d-actions">
+      <a href="#">로그아웃</a>
+      <a href="#">탈퇴하기</a>
+    </div>
+  </aside>
+
+  <!-- Drawer 스크립트: 페이지 진입 시 강제로 닫아두기 -->
+  <script>
+    const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+    const open=()=>{ dr?.classList.add('open'); sc?.classList.add('show'); };
+    const close=()=>{ dr?.classList.remove('open'); sc?.classList.remove('show'); };
+    d.getElementById('openDrawer')?.addEventListener('click', open);
+    d.getElementById('openDrawer2')?.addEventListener('click', open);
+    sc?.addEventListener('click', close);
+    d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+    // 혹시 이전 페이지에서 열린 상태로 넘어오면 초기화
+    d.addEventListener('DOMContentLoaded', ()=> close());
+  </script>
+</body>
+</html>

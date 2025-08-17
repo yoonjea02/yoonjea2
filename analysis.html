@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI 분석</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-page="analytics">
+  <div class="wrap">
+    <!-- Header -->
+    <header>
+      <div class="top-bar">
+        <div class="time">19:31</div>
+        <div class="status" aria-hidden="true"><span>📶</span><span>📡</span><span>🔋</span></div>
+      </div>
+      <div class="top-actions">
+        <a class="btn" href="log.html">로그</a>
+        <div>
+          <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main -->
+    <main class="section stack">
+      <section class="insight">
+        <h3>그린루틴 인사이트</h3>
+        <p class="small">평일 저녁 6–9시 전기/수도 사용량이 상대적으로 높아요. 이 시간대 팁을 확인해보세요.</p>
+      </section>
+
+      <section class="panel">
+        <h3>@@@님의 하루 에너지 사용량 그래프</h3>
+        <div class="chart-line">라인 차트 영역</div>
+      </section>
+
+      <section class="stack" style="gap:12px">
+        <article class="tip-card">
+          <h4>전기</h4>
+          <ul>
+            <li>에어컨 온도를 2도 높이면 월 약 7,000원 절약</li>
+            <li>외출 시 TV/셋톱박스 절전모드 설정</li>
+          </ul>
+        </article>
+        <article class="tip-card">
+          <h4>수도</h4>
+          <ul>
+            <li>샤워 시간 5분 단축 시 월 약 1,200L 절감</li>
+            <li>세탁은 모아서 ‘절약’ 모드 사용</li>
+          </ul>
+        </article>
+        <article class="tip-card">
+          <h4>가스</h4>
+          <ul>
+            <li>보일러 외출 모드로 전환 시 하루 약 500원 절약</li>
+            <li>온수 온도 2도 낮추면 월 약 4,000원 절감</li>
+          </ul>
+        </article>
+      </section>
+    </main>
+
+    <!-- Tabs -->
+    <footer>
+      <div class="tabs">
+        <a class="tab" href="index.html" aria-label="홈">홈</a>
+        <a class="tab active" href="analysis.html" aria-label="AI 분석">AI</a>
+        <a class="tab" href="goals.html" aria-label="실시간 요금">요금</a>
+        <a class="tab" href="profile.html" aria-label="마이페이지">마이</a>
+        <button class="tab" id="openDrawer2" type="button" aria-label="전체">전체</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Drawer (홈과 동일한 콘텐츠) -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div>
+        <div class="d-name">@@@님</div>
+        <div class="d-email">aaa123@gmail.com</div>
+      </div>
+    </div>
+
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+
+    <div class="d-hr"></div>
+    <div class="d-actions">
+      <a href="#">로그아웃</a>
+      <a href="#">탈퇴하기</a>
+    </div>
+  </aside>
+
+  <!-- Scripts -->
+  <script src="app3.js" defer></script>
+  <script>
+    // 드로어 열고/닫기 (페이지 진입 시 닫힘 상태 보장)
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      if(!dr || !sc) return;
+      const open=()=>{ dr.classList.add('open'); sc.classList.add('show'); };
+      const close=()=>{ dr.classList.remove('open'); sc.classList.remove('show'); };
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      d.addEventListener('DOMContentLoaded', close); // 혹시 이전 화면에서 열린 상태로 넘어온 경우 닫기
+    })();
+  </script>
+</body>
+</html>

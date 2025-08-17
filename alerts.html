@@ -8,6 +8,7 @@
 </head>
 <body data-page="alerts">
   <div class="wrap">
+    <!-- Header -->
     <header>
       <div class="top-bar">
         <div class="time">--:--</div>
@@ -17,98 +18,90 @@
         <a class="btn" href="index.html">홈</a>
         <div>
           <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
-          <a class="icon-btn" href="search.html" aria-label="검색">🔍</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
         </div>
       </div>
     </header>
 
-    <main class="section">
-      <div class="page-grid">
-        <!-- LEFT -->
-        <section>
-          <h2 class="page-title">알림</h2>
-          <div class="toolbar">
-            <a class="pill active" href="#">전체</a>
-            <a class="pill" href="#">요금</a>
-            <a class="pill" href="#">절약팁</a>
-            <a class="pill" href="#">시스템</a>
-          </div>
-
-          <div class="list grid-2" style="margin-top:10px">
-            <div class="list-item">
-              <div class="icon">⚡</div>
-              <div>
-                <p class="title">8월 전기요금이 지난달 대비 12% 감소했습니다.</p>
-                <div class="meta">방금 전 · 자동 분석</div>
-              </div>
-              <span class="badge ok">긍정</span>
-            </div>
-
-            <div class="list-item">
-              <div class="icon">🚿</div>
-              <div>
-                <p class="title">7월 수도요금이 예상보다 5% 높았습니다.</p>
-                <div class="meta">어제 · 예산 초과 위험</div>
-              </div>
-              <span class="badge warn">주의</span>
-            </div>
-
-            <div class="list-item">
-              <div class="icon">💡</div>
-              <div>
-                <p class="title">대기전력 절감: 멀티탭 스케줄 OFF 추천</p>
-                <div class="meta">2일 전 · 절약 팁</div>
-              </div>
-              <span class="badge info">팁</span>
-            </div>
-
-            <div class="list-item">
-              <div class="icon">🔧</div>
-              <div>
-                <p class="title">센서 연결 상태가 잠시 불안정했습니다.</p>
-                <div class="meta">3일 전 · 시스템</div>
-              </div>
-              <span class="badge info">알림</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- RIGHT -->
-        <aside class="aside-card">
+    <!-- Main -->
+    <main class="section stack">
+      <div class="list">
+        <article class="list-item">
+          <div class="icon">🔔</div>
           <div>
-            <strong>이번 달 알림 통계</strong>
-            <div class="kpi-rows" style="margin-top:8px">
-              <div class="kpi-tile"><div class="label">전체</div><div class="value">18</div></div>
-              <div class="kpi-tile"><div class="label">확인</div><div class="value">15</div></div>
-              <div class="kpi-tile"><div class="label">주의</div><div class="value">2</div></div>
-              <div class="kpi-tile"><div class="label">팁</div><div class="value">6</div></div>
-            </div>
+            <div><strong>대기전력 절감: 멀티탭 스케줄 OFF 추천</strong></div>
+            <div class="small">2일 전 · 절약 팁</div>
           </div>
+          <span class="badge info">팁</span>
+        </article>
 
-          <div class="divider"></div>
-
+        <article class="list-item">
+          <div class="icon">🔔</div>
           <div>
-            <strong>빠른 필터</strong>
-            <div class="pills" style="margin-top:8px">
-              <a class="pill" href="#">미확인만</a>
-              <a class="pill" href="#">주의/경고</a>
-              <a class="pill" href="#">절약팁</a>
-            </div>
+            <div><strong>센서 연결 상태가 잠시 불안정</strong></div>
+            <div class="small">3일 전 · 시스템</div>
           </div>
-        </aside>
+          <span class="badge warn">알림</span>
+        </article>
       </div>
+
+      <section class="stats-card">
+        <h3 style="margin:0 0 10px">이번 달 알림 통계</h3>
+        <div class="stat-grid">
+          <div class="stat"><div class="emoji">🔔</div><div class="value">18</div><div class="label">전체</div></div>
+          <div class="stat"><div class="emoji">✅</div><div class="value">15</div><div class="label">확인</div></div>
+          <div class="stat"><div class="emoji">⚠️</div><div class="value">2</div><div class="label">주의</div></div>
+          <div class="stat"><div class="emoji">💡</div><div class="value">6</div><div class="label">절약 팁</div></div>
+          <div class="stat"><div class="emoji">ℹ️</div><div class="value">3</div><div class="label">안내</div></div>
+          <div class="stat"><div class="emoji">🕒</div><div class="value">1.1h</div><div class="label">평균 응답</div></div>
+        </div>
+      </section>
     </main>
 
+    <!-- Tabs -->
     <footer>
-      <nav class="nav">
-        <a class="dot" href="index.html">🏠</a>
-        <a class="dot" href="index.html#cost">💡</a>
-        <a class="dot" href="log.html">📈</a>
-        <a class="dot" href="alerts.html">🔔</a>
-        <a class="dot" href="search.html">⚙️</a>
-      </nav>
+      <div class="tabs">
+        <a class="tab" href="index.html">홈</a>
+        <a class="tab" href="analysis.html">AI</a>
+        <a class="tab" href="goals.html">요금</a>
+        <a class="tab" href="profile.html">마이</a>
+        <button class="tab" id="openDrawer2" type="button">전체</button>
+      </div>
     </footer>
   </div>
-  <script src="app3.js" defer></script>
+
+  <!-- Drawer (공통) -->
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" id="drawer" aria-label="전체 메뉴">
+    <div class="d-hero">
+      <div class="d-avatar">👤</div>
+      <div><div class="d-name">@@@님</div><div class="d-email">aaa123@gmail.com</div></div>
+    </div>
+    <div class="d-grid">
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
+      <a class="d-btn" href="alerts.html"><div class="emoji">🔔</div><div class="label">알림</div></a>
+      <a class="d-btn" href="#"><div class="emoji">📢</div><div class="label">공지사항</div></a>
+      <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">마이페이지</div></a>
+      <a class="d-btn" href="#"><div class="emoji">💬</div><div class="label">고객센터</div></a>
+      <a class="d-btn" href="search.html"><div class="emoji">🔎</div><div class="label">검색</div></a>
+    </div>
+    <div class="d-hr"></div>
+    <div class="d-actions"><a href="#">로그아웃</a><a href="#">탈퇴하기</a></div>
+  </aside>
+
+  <!-- Drawer script -->
+  <script>
+    (function(){
+      const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+      const open=()=>{dr.classList.add('open'); sc.classList.add('show');};
+      const close=()=>{dr.classList.remove('open'); sc.classList.remove('show');};
+      d.getElementById('openDrawer')?.addEventListener('click', open);
+      d.getElementById('openDrawer2')?.addEventListener('click', open);
+      sc.addEventListener('click', close);
+      d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
+      d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
 </body>
 </html>

@@ -289,3 +289,13 @@ App.register({
    렌더 함수는 bus.on("state:changed")로 구독하세요.
 
 ================================================ */
+// Drawer helper (optional)
+(function(){
+  const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
+  if(!dr||!sc) return;
+  const open=()=>{ dr.classList.add('open'); sc.classList.add('show'); };
+  const close=()=>{ dr.classList.remove('open'); sc.classList.remove('show'); };
+  d.querySelectorAll('#openDrawer, #openDrawer2').forEach(b=>b?.addEventListener('click', open));
+  sc.addEventListener('click', close);
+  d.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
+})();
