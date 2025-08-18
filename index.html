@@ -7,6 +7,41 @@
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
 
+  <!-- ✅ 이 페이지에서 '예상 관리 요금 한눈에' 섹션만 가로 스크롤 -->
+  <style>
+    /* 전체 페이지는 세로 스크롤만 유지 */
+    body[data-page="home"] { touch-action: pan-y; }
+    body[data-page="home"] .wrap { overflow-x: hidden; }
+
+    /* 패널 자체는 고정 폭 유지 */
+    body[data-page="home"] section.panel[aria-label="예상 관리 요금 한눈에"]{
+      overflow: hidden; /* 패널 밖으로 새지 않게 */
+    }
+
+    /* ⬇️ 이 컨테이너만 가로 스크롤, 폭은 100% 고정 */
+    body[data-page="home"] section.panel[aria-label="예상 관리 요금 한눈에"] .cards{
+      display: flex !important;           /* 기존 grid를 이 섹션에서만 flex로 */
+      width: 100%;                        /* 패널 너비에 맞춰 고정 */
+      max-width: 100%;
+      box-sizing: border-box;
+      gap: 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-x;                /* 가로 제스처만 허용 */
+      overscroll-behavior-x: contain;     /* 바깥으로 스크롤 전이 방지 */
+      scroll-snap-type: x mandatory;      /* 카드별 스냅 */
+      padding-bottom: 4px;                /* 스크롤바 여백 */
+    }
+
+    /* ⬇️ 각 카드는 컨테이너 폭 100% (원래 카드 크기 유지) */
+    body[data-page="home"] section.panel[aria-label="예상 관리 요금 한눈에"] .cards > .card{
+      flex: 0 0 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      scroll-snap-align: start;
+    }
+  </style>
 </head>
 <body data-page="home">
   <div class="wrap">
@@ -54,7 +89,7 @@
         </div>
       </section>
 
-      <!-- 카드: 전기/수도 -->
+      <!-- 카드: 전기/가스 (이 섹션만 가로 스크롤 가능) -->
       <section class="panel" aria-label="예상 관리 요금 한눈에">
         <h3 style="margin:0 0 12px">예상 관리 요금 한눈에 모아보기 &gt;</h3>
         <div class="cards">
@@ -63,10 +98,18 @@
             <div class="kpi" id="elecPrice">13,830 원</div>
             <div class="donut" id="donutElec" style="--percent:42"><div class="center">전기 비중</div></div>
           </article>
-          <article class="card" aria-label="수도">
+          <article class="card" aria-label="가스">
             <div class="label">🔥 예상 가스 요금</div>
-            <div class="kpi" id="waterPrice">7,820 원</div>
-            <div class="donut" id="donutWater" style="--percent:24"><div class="center">수도 비중</div></div>
+            <div class="kpi" id="gasPrice">7,820 원</div>
+            <div class="donut" id="donutGas" style="--percent:24"><div class="center">가스 비중</div></div>
+          </article>
+                    <!-- ➕ 추가: 수도 카드 (cards 컨테이너 맨 뒤에 붙여넣기) -->
+          <article class="card" aria-label="수도">
+            <div class="label">💧 예상 수도 요금</div>
+            <div class="kpi" id="waterPrice">9,400 원</div>
+            <div class="donut" id="donutWater" style="--percent:33">
+              <div class="center">수도 비중</div>
+            </div>
           </article>
         </div>
       </section>
@@ -110,7 +153,7 @@
     </footer>
   </div>
 
-  <!-- Drawer (✅ 홈에서도 공통 드로어로 교체) -->
+  <!-- Drawer (공통) -->
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-label="전체 메뉴">
     <div class="d-hero">
@@ -150,7 +193,6 @@
       d.getElementById('openDrawer2')?.addEventListener('click', open);
       sc.addEventListener('click', close);
       d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
-      // 혹시 다른 페이지에서 열린 채 넘어오면 초기화
       d.addEventListener('DOMContentLoaded', close);
     })();
   </script>
