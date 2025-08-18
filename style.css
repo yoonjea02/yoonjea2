@@ -200,8 +200,8 @@ header{
 .tip-card{padding:14px; display:grid; gap:8px; background:var(--surface-2)}
 .tip-card h4{margin:0; display:flex; align-items:center; gap:8px; font-size:var(--fs-16)}
 .tip-card:nth-of-type(1) h4::after{content:"⚡"}
-.tip-card:nth-of-type(2) h4::after{content:"💧"}
-.tip-card:nth-of-type(3) h4::after{content:"🔥"}
+.tip-card:nth-of-type(2) h4::after{content:"🔥"}
+
 
 /* ---------- Search (센터 정렬 유지, 색만) ---------- */
 body[data-page="search"] .search-box,
