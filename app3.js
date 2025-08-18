@@ -299,3 +299,111 @@ App.register({
   sc.addEventListener('click', close);
   d.addEventListener('keydown', (e)=>{ if(e.key==='Escape') close(); });
 })();
+<!-- app3.js (맨 아래쪽에 붙여 넣기) -->
+<script>
+// ★ 로그인 유저 아이디만 실제 값으로 바꿔 쓰세요
+const USER_ID = 1;
+
+/* ─────────────────────────
+ * 알림 아이콘 뱃지(안 읽은 개수)
+ * - 페이지 로드 시 1번만 조회해서 작게 표시
+ * - HTML을 안 바꿔도 JS로 요소를 만들어서 붙입니다.
+ * ───────────────────────── */
+async function paintBellUnread() {
+  try {
+    const count = await window.api.getUnreadCount(USER_ID);
+    const bell = document.querySelector('.top-actions a[aria-label="알림"]');
+    if (!bell) return;
+
+    // 기존 배지 제거
+    bell.querySelector('.bell-badge')?.remove();
+
+    if (count > 0) {
+      // 작은 동그라미 숫자
+      const badge = document.createElement('span');
+      badge.className = 'bell-badge';
+      Object.assign(badge.style, {
+        position: 'absolute',
+        top: '-4px',
+        right: '-4px',
+        minWidth: '16px',
+        height: '16px',
+        padding: '0 4px',
+        borderRadius: '999px',
+        background: '#ef4444',
+        color: '#fff',
+        fontSize: '11px',
+        lineHeight: '16px',
+        textAlign: 'center',
+        boxShadow: '0 1px 2px rgba(0,0,0,.2)',
+      });
+      badge.textContent = String(count);
+      // 부모(anchor)를 상대 위치로
+      bell.style.position = 'relative';
+      bell.appendChild(badge);
+    }
+  } catch (e) {
+    console.warn('안읽은 개수 조회 실패', e);
+  }
+}
+
+/* ─────────────────────────
+ * 알림 목록 페이지: SSE 구독
+ * - body[data-page="alerts"]에서만 실행
+ * - 서버가 보내는 alert payload 예:
+ *   { userId:1, category:"BILL", level:"INFO", title:"8월 전기요금 5% 증가", at:"2025-08-17T17:10:12.123" }
+ * ───────────────────────── */
+function initAlertsSSE() {
+  if (document.body.dataset.page !== 'alerts') return;
+
+  const list = document.querySelector('.list');
+
+  function addAlertRow(a) {
+    // level → 배지 색 (디자인은 기존 클래스 재사용)
+    const levelToClass = {
+      INFO: 'info',
+      WARN: 'warn',
+      CRIT: 'warn',
+    };
+    const badgeClass = levelToClass[a.level] || 'info';
+    const when = a.at ? new Date(a.at).toLocaleString() : '방금 전';
+
+    // 기존 카드 스타일에 맞춰 article 생성 (HTML 구조는 그대로)
+    const item = document.createElement('article');
+    item.className = 'list-item';
+    item.innerHTML = `
+      <div class="icon">🔔</div>
+      <div>
+        <div><strong class="title">${escapeHtml(a.title || '알림')}</strong></div>
+        <div class="small">${when} · ${a.category || '알림'}</div>
+      </div>
+      <span class="badge ${badgeClass}">${a.level || 'INFO'}</span>
+    `;
+    list?.prepend(item); // 새 알림이 위로 오게
+  }
+
+  // XSS 방지용 아주 간단한 이스케이프
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  // 구독 시작
+  window.api.subscribeAlerts(USER_ID, {
+    onOpen: () => console.log('SSE 연결됨'),
+    onAlert: (payload) => {
+      addAlertRow(payload);
+      // 새 알림이 왔으니 아이콘 배지도 갱신
+      paintBellUnread();
+    },
+    onError: (e) => console.warn('SSE 오류', e),
+  });
+}
+
+/* 초기화 */
+document.addEventListener('DOMContentLoaded', () => {
+  paintBellUnread();
+  initAlertsSSE();
+});
+</script>

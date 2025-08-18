@@ -196,5 +196,615 @@
       d.addEventListener('DOMContentLoaded', close);
     })();
   </script>
+  <script>
+/*
+  [무엇을 하나요?]
+  - 서버에서 도넛 차트 데이터(전기/가스 요금 + 비중)를 가져옵니다.
+  - 가져온 숫자를 화면의 텍스트에 넣고,
+    도넛 요소의 CSS 변수(--percent)를 바꿔서 그래프가 채워지게 합니다.
+
+  [어디를 수정해요?]
+  - 아래 API_BASE와 periodYm만 여러분 서버 상황에 맞게 바꾸면 됩니다.
+  - 나머지는 건들 필요 없어요.
+*/
+(async function () {
+  // 1) 여러분 백엔드 주소 (예: /api/donut)
+  const API_BASE = "/api/donut";
+
+  // 2) 조회할 기간(YYYY-MM). 현재 달로 자동 설정해 둠.
+  //    필요하면 "2025-08" 처럼 직접 문자열로 넣어도 됩니다.
+  const now = new Date();
+  const periodYm =
+    now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+
+  // ──────────────────────────────────────────────────────────────
+  // 아래부터는 코드가 자동으로 해줘요. 수정 불필요!
+  // ──────────────────────────────────────────────────────────────
+
+  // (중요) 우리 HTML의 요소들 잡기
+  //  - 전기 금액:  #elecPrice
+  //  - 가스 금액:  #waterPrice  ←(주의) HTML에서 가스 카드에 이 id가 쓰이고 있음
+  //  - 총합 금액:  #totalPrice  (있으면 업데이트)
+  //  - 전기 도넛:  #donutElec
+  //  - 가스 도넛:  #donutWater  ←(주의) 이름은 water지만 가스 도넛임
+  const $elecPrice = document.getElementById("elecPrice");
+  const $gasPrice  = document.getElementById("waterPrice"); // HTML 구조에 맞춤
+  const $total     = document.getElementById("totalPrice");
+  const $donutElec = document.getElementById("donutElec");
+  const $donutGas  = document.getElementById("donutWater");
+
+  // 숫자를 12,345 처럼 예쁘게 포맷
+  const fmt = new Intl.NumberFormat("ko-KR");
+
+  // (선방) YYYY-MM 형식 확인 → 틀리면 아예 요청하지 않음 (백엔드 400 예방)
+  const isYm = /^\d{4}-(0[1-9]|1[0-2])$/.test(periodYm);
+  if (!isYm) {
+    console.warn("periodYm 형식이 올바르지 않아요. 예: 2025-08");
+    return; // 요청 중단, 화면 값은 기존 그대로 둠
+  }
+
+  try {
+    // 서버로 요청 보내기
+    const res = await fetch(`${API_BASE}?periodYm=${encodeURIComponent(periodYm)}`);
+
+    // 400: period 형식이 YYYY-MM 이 아닌 경우 (백엔드 명세)
+    if (res.status === 400) {
+      console.error("서버가 400을 돌려줬어요. periodYm 형식을 확인해 주세요 (YYYY-MM).");
+      return; // 화면은 기존 값 유지
+    }
+
+    // 그 외 실패
+    if (!res.ok) {
+      console.error("데이터를 불러오지 못했어요. (상태:", res.status, ")");
+      return;
+    }
+
+    // 200 OK → JSON 꺼내기
+    /** 기대하는 응답 형태 (DonutResponse)
+     * {
+     *   "periodYm": "2025-08",
+     *   "elec": 13830,        // 전기요금(원)
+     *   "gas":  7820,         // 가스요금(원)
+     *   "total": 21650,       // 합계
+     *   "elecRatio": 0.64,    // 0~1 (합계가 0이면 0)
+     *   "gasRatio":  0.36
+     * }
+     */
+    const data = await res.json();
+
+    // 금액 텍스트 바꾸기 (요소가 없으면 조용히 패스)
+    if ($elecPrice && typeof data.elec === "number") {
+      $elecPrice.textContent = `${fmt.format(data.elec)} 원`;
+    }
+    if ($gasPrice && typeof data.gas === "number") {
+      $gasPrice.textContent = `${fmt.format(data.gas)} 원`;
+    }
+    if ($total && typeof data.total === "number") {
+      $total.textContent = `${fmt.format(data.total)} 원`;
+    }
+
+    // 도넛 채우기 퍼센트 계산(0~100)
+    // 서버는 0~1 사이 비율을 주므로 100을 곱해요.
+    const elecPct = Math.max(0, Math.min(100, Math.round((data.elecRatio || 0) * 100)));
+    const gasPct  = Math.max(0, Math.min(100, Math.round((data.gasRatio  || 0) * 100)));
+
+    // CSS 변수 --percent에 숫자 넣기 → conic-gradient로 도넛이 채워짐
+    if ($donutElec) $donutElec.style.setProperty("--percent", elecPct);
+    if ($donutGas)  $donutGas.style.setProperty("--percent",  gasPct);
+
+  } catch (err) {
+    // 인터넷이 끊겼거나, CORS 등으로 실패한 경우
+    console.error("네트워크 오류로 데이터를 불러오지 못했어요.", err);
+    // 화면은 기존 값 유지 (사용자에게 깨진 화면을 보여주지 않음)
+  }
+})();
+</script>
+<script>
+/*
+  [무엇을 하나요?]
+  - 백엔드에서 월별 일자 누적 값(전기/가스/합계)을 가져옵니다.
+  - 가져온 값으로 "누적 막대차트"를 SVG로 그립니다(해당 박스 안에서만).
+  - 화면 레이아웃/크기는 바꾸지 않습니다.
+
+  [어디에 붙이나요?]
+  - 이 <script>를 페이지 맨 아래, </body> 바로 위에 붙이면 됩니다.
+
+  [어떤 요소에 그리나요?]
+  - 우선 id="chartBars" 요소를 찾습니다.
+  - 없으면 .chart-line 요소를 찾아 그 안에 그립니다.
+*/
+
+(async function () {
+  // 1) 여러분 백엔드 API 엔드포인트 (예: /api/monthly-bars)
+  const API_BASE = "/api/monthly-bars";
+
+  // 2) 조회 기간(YYYY-MM). 기본은 현재 달로 자동 설정.
+  //    필요하면 "2025-08" 처럼 직접 문자열로 고정해도 됩니다.
+  const now = new Date();
+  const periodYm =
+    now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+
+  // 3) 차트를 그릴 컨테이너 찾기(우선순위: #chartBars → .chart-line)
+  const container =
+    document.getElementById("chartBars") ||
+    document.querySelector(".chart-line");
+
+  if (!container) {
+    console.warn("차트 컨테이너(#chartBars 또는 .chart-line)를 찾지 못했습니다.");
+    return;
+  }
+
+  // 보기 좋은 숫자 포맷(12,345)
+  const fmt = new Intl.NumberFormat("ko-KR");
+
+  // YYYY-MM 형식 체크(백엔드 400 예방)
+  const isYm = /^\d{4}-(0[1-9]|1[0-2])$/.test(periodYm);
+  if (!isYm) {
+    console.warn("periodYm 형식이 올바르지 않아요. 예: 2025-08");
+    return;
+  }
+
+  // ─────────────────────────────────────────────
+  // API 호출
+  // ─────────────────────────────────────────────
+  let chartData = null;
+  try {
+    const res = await fetch(`${API_BASE}?periodYm=${encodeURIComponent(periodYm)}`);
+
+    if (res.status === 400) {
+      console.error("서버 400: periodYm 형식을 확인하세요(YYYY-MM).");
+      return;
+    }
+    if (!res.ok) {
+      console.error("데이터 요청 실패. 상태:", res.status);
+      return;
+    }
+
+    /** 기대 응답(200 OK)
+     * {
+     *   "periodYm": "2025-08",
+     *   "bars": [
+     *     { "day": 1, "elecCum": 4800,  "gasCum": 3100, "totalCum": 7900  },
+     *     { "day": 2, "elecCum": 9600,  "gasCum": 6400, "totalCum": 16000 },
+     *     ...
+     *   ]
+     * }
+     */
+    chartData = await res.json();
+  } catch (err) {
+    console.error("네트워크 오류로 데이터를 가져오지 못했습니다.", err);
+    return;
+  }
+
+  // bars 배열이 없거나 비면 종료
+  if (!chartData || !Array.isArray(chartData.bars) || !chartData.bars.length) {
+    container.textContent = "데이터가 없습니다.";
+    return;
+  }
+
+  // ─────────────────────────────────────────────
+  // 차트 그리기 함수 (컨테이너 크기에 맞춰 SVG 생성)
+  // ─────────────────────────────────────────────
+  function drawBars() {
+    // 컨테이너 내부를 깨끗이 비움(레이아웃 자체는 안 건드립니다)
+    container.innerHTML = "";
+
+    // 컨테이너의 현재 픽셀 크기를 가져와 그 안에 SVG를 만듭니다.
+    const width  = Math.max(200, Math.floor(container.clientWidth));
+    const height = Math.max(160, 180); // 너무 낮지 않게 기본 180px
+
+    const margin = { top: 8, right: 8, bottom: 22, left: 28 };
+    const iw = width  - margin.left - margin.right; // inner width
+    const ih = height - margin.top  - margin.bottom; // inner height
+
+    // y 스케일: 최대 totalCum 기준으로 높이를 정함
+    const maxY = chartData.bars.reduce((m, b) => Math.max(m, b.totalCum || 0), 0) || 1;
+
+    // x 간격(막대 개수에 따라 자동 계산)
+    const n = chartData.bars.length;
+    const slot = iw / n;                    // 각 일(day)마다 쓸 수 있는 가로칸
+    const barW = Math.max(3, Math.min(20, slot * 0.6)); // 막대 실제 너비(너무 두껍/얇지 않게)
+
+    // SVG 생성
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", width);
+    svg.setAttribute("height", height);
+    svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+    svg.style.display = "block"; // 부모 레이아웃 영향 없음
+
+    // 배경 그리드 3줄 정도(읽기 도움용, 스타일은 은은하게)
+    const gridG = document.createElementNS(svg.namespaceURI, "g");
+    const gridCount = 3;
+    for (let i = 1; i <= gridCount; i++) {
+      const y = margin.top + (ih * i) / (gridCount + 1);
+      const line = document.createElementNS(svg.namespaceURI, "line");
+      line.setAttribute("x1", margin.left);
+      line.setAttribute("y1", y);
+      line.setAttribute("x2", width - margin.right);
+      line.setAttribute("y2", y);
+      line.setAttribute("stroke", "rgba(0,0,0,0.06)");
+      line.setAttribute("stroke-width", "1");
+      gridG.appendChild(line);
+    }
+    svg.appendChild(gridG);
+
+    // 막대 그룹
+    const barsG = document.createElementNS(svg.namespaceURI, "g");
+
+    chartData.bars.forEach((b, i) => {
+      const xCenter = margin.left + i * slot + slot / 2;
+      const x = xCenter - barW / 2;
+
+      const total = Math.max(0, b.totalCum || 0);
+      const elec  = Math.max(0, b.elecCum  || 0);
+      const gas   = Math.max(0, b.gasCum   || 0);
+
+      // 높이(픽셀)로 변환
+      const totalH = (total / maxY) * ih;
+      const elecH  = (elec  / maxY) * ih;
+      let gasH     = totalH - elecH;            // 누적: total = elec + gas
+      gasH = Math.max(0, gasH);                 // 혹시 반올림으로 음수 방지
+
+      const baseY  = height - margin.bottom;
+
+      // 가스(아래쪽) – 주황
+      const gasRect = document.createElementNS(svg.namespaceURI, "rect");
+      gasRect.setAttribute("x", x);
+      gasRect.setAttribute("y", baseY - gasH);
+      gasRect.setAttribute("width", barW);
+      gasRect.setAttribute("height", gasH);
+      gasRect.setAttribute("rx", "2");
+      gasRect.setAttribute("fill", "#f97316"); // 가스(주황)
+      barsG.appendChild(gasRect);
+
+      // 전기(위쪽) – 노랑
+      const elecRect = document.createElementNS(svg.namespaceURI, "rect");
+      elecRect.setAttribute("x", x);
+      elecRect.setAttribute("y", baseY - totalH);
+      elecRect.setAttribute("width", barW);
+      elecRect.setAttribute("height", elecH);
+      elecRect.setAttribute("rx", "2");
+      elecRect.setAttribute("fill", "#facc15"); // 전기(노랑)
+      barsG.appendChild(elecRect);
+
+      // x축 라벨(5일에 한 번만 표시해 복잡도 줄임)
+      if (b.day % 5 === 0 || i === 0 || i === n - 1) {
+        const label = document.createElementNS(svg.namespaceURI, "text");
+        label.setAttribute("x", xCenter);
+        label.setAttribute("y", baseY + 14);
+        label.setAttribute("text-anchor", "middle");
+        label.setAttribute("font-size", "10");
+        label.setAttribute("fill", "rgba(0,0,0,0.55)");
+        label.textContent = b.day; // 일(day)
+        barsG.appendChild(label);
+      }
+    });
+
+    svg.appendChild(barsG);
+
+    // 간단한 범례(전기/가스)
+    const legendG = document.createElementNS(svg.namespaceURI, "g");
+    const items = [
+      { color: "#facc15", label: "전기 누적" },
+      { color: "#f97316", label: "가스 누적" },
+    ];
+    let lx = width - margin.right - 100; // 오른쪽 위에 배치
+    const ly = margin.top + 6;
+    items.forEach((it, idx) => {
+      const box = document.createElementNS(svg.namespaceURI, "rect");
+      box.setAttribute("x", lx + idx * 60);
+      box.setAttribute("y", ly - 8);
+      box.setAttribute("width", 10);
+      box.setAttribute("height", 10);
+      box.setAttribute("rx", 2);
+      box.setAttribute("fill", it.color);
+      legendG.appendChild(box);
+
+      const txt = document.createElementNS(svg.namespaceURI, "text");
+      txt.setAttribute("x", lx + 14 + idx * 60);
+      txt.setAttribute("y", ly);
+      txt.setAttribute("font-size", "10");
+      txt.setAttribute("fill", "rgba(0,0,0,0.6)");
+      txt.textContent = it.label;
+      legendG.appendChild(txt);
+    });
+    svg.appendChild(legendG);
+
+    container.appendChild(svg);
+  }
+
+  // 첫 그리기
+  drawBars();
+
+  // 컨테이너가 리사이즈되면 다시 그리기(디바운스)
+  let t;
+  window.addEventListener("resize", () => {
+    clearTimeout(t);
+    t = setTimeout(drawBars, 150);
+  });
+})();
+</script>
+<script>
+/*
+  ✔ 무엇을 하나요?
+  - 절약 목표 입력 폼(#goalForm)을 가로채서 서버에 저장(POST)합니다.
+  - 응답(GoalResponse)으로 받은 퍼센트를 화면에 반영합니다.
+  - 400 오류(period 형식, 음수 금액)도 메시지로 알려줍니다.
+
+  ✔ 어디에 붙이나요?
+  - 이 <script>를 페이지 맨 아래, </body> 바로 위에 붙이면 됩니다.
+
+  ✔ 화면에서 어떤 요소를 사용하나요?
+  - #goalForm  : 폼
+  - #goalInput : 목표 금액 입력 <input>
+  - #goalHint  : 안내 문구 영역(여기에 성공/오류 메시지 출력)
+  - #goalPct   : "xx%" 텍스트
+  - #goalFill  : 진행 바(.style.width 로 채움)
+  - #savedNow  : "이번 달 절감액: x원" 텍스트
+  (위 아이디가 없는 경우엔 해당 항목은 무시하고 넘어갑니다)
+*/
+(function () {
+  // === 0) 여러분 환경에 맞게 '딱 2곳'만 수정하면 끝! =====================
+  const API_URL = "/api/saving-goal"; // ← 백엔드 '절약 목표 저장' 엔드포인트
+  const USER_ID = 1;                  // ← 로그인된 사용자 ID로 교체하세요
+  // ======================================================================
+
+  // DOM 참조
+  const d       = document;
+  const form    = d.getElementById("goalForm");
+  const input   = d.getElementById("goalInput");
+  const hintEl  = d.getElementById("goalHint");
+  const pctEl   = d.getElementById("goalPct");
+  const fillEl  = d.getElementById("goalFill");
+  const savedEl = d.getElementById("savedNow");
+
+  if (!form || !input) return; // 폼이 없으면 아무 것도 하지 않음
+
+  // 보기 좋은 숫자 포맷(12,345)
+  const fmt = new Intl.NumberFormat("ko-KR");
+
+  // YYYY-MM(예: 2025-08) 만들기
+  function getPeriodYm() {
+    const now = new Date();
+    return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  }
+
+  // 범위 제한 유틸
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+
+  // hint 문구 출력(오류는 붉게)
+  function msg(text, isError) {
+    if (!hintEl) return;
+    hintEl.textContent = text;
+    hintEl.style.color = isError ? "#e11d48" : ""; // 기본색으로 복귀
+  }
+
+  // 폼 제출 → 서버로 저장
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const raw = Number(input.value);
+    if (!Number.isFinite(raw) || raw < 0) {
+      msg("목표 금액을 0 이상 숫자로 입력해 주세요.", true);
+      return;
+    }
+
+    // 백엔드가 요구하는 RequestBody(GoalRequest)
+    const body = {
+      userId: USER_ID,              // 로그인 유저 ID
+      periodYm: getPeriodYm(),      // "YYYY-MM"
+      savingGoalWon: Math.round(raw) // 목표 금액(원) - 정수로 보냄
+    };
+
+    // periodYm 형식 사전 점검(400 예방)
+    const isYm = /^\d{4}-(0[1-9]|1[0-2])$/.test(body.periodYm);
+    if (!isYm) {
+      msg("기간 형식(YYYY-MM)이 올바르지 않습니다.", true);
+      return;
+    }
+
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
+      // 백엔드 명세: 400 → period 형식 오류 또는 savingGoalWon < 0
+      if (res.status === 400) {
+        msg("요청 형식 오류: 기간(YYYY-MM) 또는 목표 금액(0 이상)을 확인해 주세요.", true);
+        return;
+      }
+      if (!res.ok) {
+        msg("서버 오류로 저장하지 못했어요. 잠시 후 다시 시도해 주세요.", true);
+        return;
+      }
+
+      /* 기대 응답(GoalResponse)
+        {
+          "periodYm": "2025-08",
+          "savingGoalWon": 5000,     // 방금 저장한 목표
+          "baselineTotalWon": 24800, // 전월 총액(없으면 추정치)
+          "currentTotalWon": 21650,  // 현월 총액(도넛 total)
+          "savingPercent": 12.7      // (baseline-current)/baseline*100
+        }
+      */
+      const data = await res.json();
+
+      // 안전하게 값 꺼내기
+      const baseline = Number(data.baselineTotalWon || 0);
+      const current  = Number(data.currentTotalWon  || 0);
+      const saved    = Math.max(0, baseline - current);
+      const percent  = clamp(Number(data.savingPercent || 0), 0, 100);
+
+      // UI 반영(텍스트와 너비만 변경 → 레이아웃 영향 없음)
+      if (savedEl) savedEl.textContent = `이번 달 절감액: ${fmt.format(saved)} 원`;
+      if (pctEl)   pctEl.textContent   = `${percent.toFixed(1)}%`;
+      if (fillEl)  fillEl.style.width  = `${percent}%`;
+
+      msg(`목표 ${fmt.format(data.savingGoalWon)} 원 저장 완료!`, false);
+
+      // 100% 달성 뱃지 영역이 있다면 표시(선택)
+      const badge = d.getElementById("goalSuccess");
+      if (badge) badge.style.display = percent >= 100 ? "block" : "none";
+    } catch (err) {
+      console.error(err);
+      msg("네트워크 오류로 저장하지 못했어요. 인터넷 연결을 확인해 주세요.", true);
+    }
+  });
+
+  // 초기화 버튼(#goalClear)이 있으면 화면 값만 리셋(서버 호출 없음)
+  d.getElementById("goalClear")?.addEventListener("click", () => {
+    input.value = "";
+    if (pctEl)   pctEl.textContent = "0%";
+    if (fillEl)  fillEl.style.width = "0%";
+    if (savedEl) savedEl.textContent = "이번 달 절감액: 0 원";
+    msg("목표를 설정해 진행률을 확인해 보세요", false);
+  });
+})();
+</script>
+<script>
+/*
+  ✔ 무엇을 하나요?
+  - 페이지가 열릴 때 GET API(GoalResponse)를 호출해
+    저장된 목표/전월/현월/절감률을 가져옵니다.
+  - 가져온 값으로 진행바(#goalFill), 퍼센트(#goalPct),
+    절감액(#savedNow), 안내문(#goalHint), 입력값(#goalInput)을 채웁니다.
+
+  ✔ 어디에 붙이나요?
+  - 이 <script>를 페이지 맨 아래, </body> 바로 위에 붙입니다.
+
+  ✔ 화면에서 어떤 요소를 사용하나요? (없으면 건너뜀)
+  - #goalInput  : 목표 금액 입력창
+  - #goalHint   : "목표를 설정…" 안내 문구 (여기에 "목표·남은 금액"을 보여줌)
+  - #goalPct    : "xx%" 텍스트
+  - #goalFill   : 진행 바(폭을 %로 채움)
+  - #savedNow   : "이번 달 절감액: x 원"
+  - #goalSuccess: 100% 달성 뱃지 영역(있으면 표시)
+*/
+(function () {
+  // === 0) 여러분 환경에 맞게 '딱 2곳'만 수정하면 끝! =====================
+  const API_GET_URL = "/api/saving-goal"; // ← 절약 목표 조회 엔드포인트 (GET)
+  const USER_ID     = 1;                  // ← 로그인된 사용자 ID로 교체
+  // ======================================================================
+
+  // DOM 요소 참조(없으면 null → 이후 안전하게 체크)
+  const d       = document;
+  const input   = d.getElementById("goalInput");
+  const hintEl  = d.getElementById("goalHint");
+  const pctEl   = d.getElementById("goalPct");
+  const fillEl  = d.getElementById("goalFill");
+  const savedEl = d.getElementById("savedNow");
+  const badge   = d.getElementById("goalSuccess");
+
+  // 보기 좋은 숫자 포맷(12,345)
+  const fmt = new Intl.NumberFormat("ko-KR");
+
+  // 현재 달을 "YYYY-MM" 형식으로 만들기 (예: 2025-08)
+  function getPeriodYm() {
+    const now = new Date();
+    return now.getFullYear() + "-" + String(now.getMonth() + 1).padStart(2, "0");
+  }
+
+  // 0~100 사이로 제한
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+
+  // 안내문 표시(오류면 붉은색)
+  function msg(text, isError=false) {
+    if (!hintEl) return;
+    hintEl.textContent = text;
+    hintEl.style.color = isError ? "#e11d48" : ""; // 오류: 붉은색, 아니면 기본색
+  }
+
+  // 1) 서버에서 목표 데이터 가져오기 (GET /api/saving-goal?userId=1&periodYm=YYYY-MM)
+  async function fetchGoal() {
+    const periodYm = getPeriodYm();
+
+    // 400 방지: YYYY-MM 형식 사전 점검
+    const isYm = /^\d{4}-(0[1-9]|1[0-2])$/.test(periodYm);
+    if (!isYm) {
+      msg("기간 형식(YYYY-MM)이 올바르지 않습니다.", true);
+      return;
+    }
+
+    // 실제 호출 URL 만들기
+    const url = `${API_GET_URL}?userId=${encodeURIComponent(USER_ID)}&periodYm=${encodeURIComponent(periodYm)}`;
+
+    try {
+      const res = await fetch(url, { method: "GET" });
+
+      // 백엔드 명세: 400 → period 형식 오류 등
+      if (res.status === 400) {
+        msg("요청 형식 오류: 기간(YYYY-MM)을 확인해 주세요.", true);
+        return;
+      }
+
+      if (res.status === 204) {
+        // 데이터 없음(아직 목표를 저장하지 않은 경우 등)
+        msg("목표를 설정해 진행률을 확인해 보세요");
+        return;
+      }
+
+      if (!res.ok) {
+        msg("서버 오류로 목표를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.", true);
+        return;
+      }
+
+      /* 기대 응답(GoalResponse) 예시:
+        {
+          "periodYm": "2025-08",
+          "savingGoalWon": 5000,
+          "baselineTotalWon": 24800,
+          "currentTotalWon": 21650,
+          "savingPercent": 12.7
+        }
+      */
+      const data = await res.json();
+      renderGoal(data);
+    } catch (err) {
+      console.error(err);
+      msg("네트워크 오류로 목표를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.", true);
+    }
+  }
+
+  // 2) 화면에 값 반영하기
+  function renderGoal(data) {
+    // 응답 값 안전하게 숫자로 변환
+    const target   = Number(data.savingGoalWon || 0);       // 목표 금액
+    const baseline = Number(data.baselineTotalWon || 0);    // 전월 총액(없으면 0)
+    const current  = Number(data.currentTotalWon  || 0);    // 현월 총액
+    const saved    = Math.max(0, baseline - current);       // 절감액(음수 방지)
+    // 퍼센트: 서버가 준 값 우선, 없으면 (baseline-current)/baseline*100
+    const percentCalc = baseline > 0 ? ((baseline - current) / baseline) * 100 : 0;
+    const percent = clamp(
+      Number.isFinite(Number(data.savingPercent)) ? Number(data.savingPercent) : percentCalc,
+      0, 100
+    );
+
+    // 2-1) 입력창에 목표 금액 채우기
+    if (input) input.value = target ? String(target) : "";
+
+    // 2-2) "이번 달 절감액: x 원"
+    if (savedEl) savedEl.textContent = `이번 달 절감액: ${fmt.format(saved)} 원`;
+
+    // 2-3) 진행 퍼센트/게이지 채우기
+    if (pctEl)  pctEl.textContent  = `${percent.toFixed(1)}%`;
+    if (fillEl) fillEl.style.width = `${percent}%`;
+
+    // 2-4) 안내 문구에 "목표·남은 금액" 보여주기
+    if (hintEl) {
+      const remain = Math.max(0, target - saved); // 목표 - 절감액
+      hintEl.textContent = `목표: ${fmt.format(target)} 원 · 남은 금액 ${fmt.format(remain)} 원`;
+      hintEl.style.color = ""; // 기본색으로
+    }
+
+    // 2-5) 100% 달성 뱃지(있을 때만)
+    if (badge) badge.style.display = percent >= 100 ? "block" : "none";
+  }
+
+  // 페이지 로드 시 자동 조회
+  document.addEventListener("DOMContentLoaded", fetchGoal);
+})();
+</script>
 </body>
 </html>
