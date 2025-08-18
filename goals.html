@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>실시간 요금</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+
 </head>
 <body data-page="goals">
   <div class="wrap">
@@ -18,7 +20,7 @@
         <a class="btn" href="log.html">로그</a>
         <div>
           <a class="icon-btn" href="alerts.html" aria-label="알림">🔔</a>
-        <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
+          <a class="icon-btn" href="search.html" aria-label="검색">🔎</a>
           <button class="icon-btn" id="openDrawer" aria-label="전체 메뉴">🧭</button>
         </div>
       </div>
@@ -29,12 +31,16 @@
       <section class="panel">
         <h3>절약 목표 한눈에 파악하기</h3>
 
-        <!-- 절약 목표 카드 -->
+        <!-- 절약 목표 카드 (제목 1줄 + 우측 목표/남은금액 2줄) -->
         <div class="goal-card">
-          <div class="goal-head">
-            <h3 class="goal-title">이번 달 절약 목표</h3>
-            <span id="goalHint" class="goal-meta">목표: 30,000 원 · 남은 금액 25,600 원</span>
+          <div class="goal-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+            <h3 class="goal-title" style="white-space:nowrap;margin:0;">이번 달 절약 목표</h3>
+            <div class="goal-side" style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;">
+              <span class="goal-meta" style="white-space:nowrap;">목표: <span id="goalTarget">30,000 원</span></span>
+              <span class="goal-meta" style="white-space:nowrap;">남은 금액 <span id="goalRemain">25,600 원</span></span>
+            </div>
           </div>
+
           <div class="progress">
             <div class="progress-track"><div id="goalFill" class="progress-fill" style="width:15%"></div></div>
             <div class="progress-label">
@@ -51,34 +57,48 @@
           </form>
         </div>
 
-        <!-- 종목별 사용 금액 (가로 막대 그래프) -->
-        <div class="usage-bars" aria-label="종목별 이번 달 사용 금액" style="margin-top:14px">
-          <div class="usage">
-            <div class="usage-head">
-              <div class="left"><span class="emo">⚡</span><span class="name">전기</span></div>
-              <div class="right"><strong class="val">5,380 원</strong></div>
-            </div>
-            <div class="usage-meter"><div class="usage-fill u-yellow" style="--w:26.9%"></div></div>
+        <!-- (NEW) 근처 유저 비교 문구 + 미니 막대그래프 -->
+        <section class="neighbor-note">
+          <p class="neighbor-title">
+            근처 유저 중 <strong class="hl">@@님</strong>은 에너지 절약 성공률
+            <strong class="hl">상위 7%예요!</strong>
+          </p>
+          <div class="mini-colchart" aria-label="근처 유저 비교 그래프">
+            <div class="col self" style="--h:84%"><span class="val">84%</span><span class="lab">@@@님</span></div>
+            <div class="col others" style="--h:28%"><span class="val">28%</span><span class="lab">안서동 유저</span></div>
           </div>
+        </section>
 
-          <div class="usage">
-            <div class="usage-head">
-              <div class="left"><span class="emo">💧</span><span class="name">수도</span></div>
-              <div class="right"><strong class="val">7,400 원</strong></div>
+        <!-- (NEW) 종목별 목표 설정금액 달성률 -->
+        <section class="cat-goals">
+          <!-- 전기 -->
+          <div class="goal-line" data-now="5380" data-target="10000">
+            <div class="gl-head">
+              <div class="label">⚡ 전기</div>
+              <div class="val nowrap"><span class="now">5,380</span> / <span class="target">10,000</span> 원</div>
             </div>
-            <div class="usage-meter"><div class="usage-fill u-blue" style="--w:37%"></div></div>
+            <div class="gl-meter"><div class="gl-fill"></div></div>
+            <div class="gl-pct nowrap">0%</div>
           </div>
-
-          <div class="usage">
-            <div class="usage-head">
-              <div class="left"><span class="emo">🔥</span><span class="name">가스</span></div>
-              <div class="right"><strong class="val">20,000 원</strong></div>
+          <!-- 수도 -->
+          <div class="goal-line" data-now="7400" data-target="10000">
+            <div class="gl-head">
+              <div class="label">💧 수도</div>
+              <div class="val nowrap"><span class="now">7,400</span> / <span class="target">10,000</span> 원</div>
             </div>
-            <div class="usage-meter"><div class="usage-fill u-orange" style="--w:100%"></div></div>
+            <div class="gl-meter"><div class="gl-fill"></div></div>
+            <div class="gl-pct nowrap">0%</div>
           </div>
-
-          <div class="usage-legend small">최댓값(가스 20,000원) 기준 상대 비교</div>
-        </div>
+          <!-- 가스 -->
+          <div class="goal-line" data-now="20000" data-target="30000">
+            <div class="gl-head">
+              <div class="label">🔥 가스</div>
+              <div class="val nowrap"><span class="now">20,000</span> / <span class="target">30,000</span> 원</div>
+            </div>
+            <div class="gl-meter"><div class="gl-fill"></div></div>
+            <div class="gl-pct nowrap">0%</div>
+          </div>
+        </section>
       </section>
     </main>
 
@@ -99,7 +119,7 @@
   <aside class="drawer" id="drawer" aria-label="전체 메뉴">
     <div class="d-hero">
       <div class="d-avatar">👤</div>
-      <div><div class="d-name">@@@님</div><div class="d-email">aaa123@gmail.com</div></div>
+      <div><div class="d-name">@@님</div><div class="d-email">aaa123@gmail.com</div></div>
     </div>
     <div class="d-grid">
       <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
@@ -113,7 +133,33 @@
     <div class="d-actions"><a href="#">로그아웃</a><a href="#">탈퇴하기</a></div>
   </aside>
 
-  <!-- Drawer script -->
+  <!-- (NEW) 달성률 계산 스크립트 -->
+  <script>
+    (function(){
+      // 숫자 포맷터
+      const fmt = new Intl.NumberFormat('ko-KR');
+
+      // 종목별 달성률 채우기
+      document.querySelectorAll('.goal-line').forEach(row=>{
+        const now = Number(row.dataset.now || 0);
+        const target = Math.max(1, Number(row.dataset.target || 0)); // 0으로 나눔 방지
+        const pct = Math.min(100, Math.round((now/target)*1000)/10); // 소수 1자리
+
+        // 표시 업데이트
+        const nowEl = row.querySelector('.now');
+        const tarEl = row.querySelector('.target');
+        const pctEl = row.querySelector('.gl-pct');
+        if (nowEl) nowEl.textContent = fmt.format(now);
+        if (tarEl) tarEl.textContent = fmt.format(target);
+        if (pctEl) pctEl.textContent = pct + '%';
+
+        const fill = row.querySelector('.gl-fill');
+        if (fill) fill.style.width = pct + '%';
+      });
+    })();
+  </script>
+
+  <!-- Drawer script (기존) -->
   <script>
     (function(){
       const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');

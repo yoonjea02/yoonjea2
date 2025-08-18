@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI 분석</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- Pretendard Variable -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
 </head>
 <body data-page="analytics">
   <div class="wrap">
@@ -26,13 +28,55 @@
 
     <!-- Main -->
     <main class="section stack">
+
+      <!-- ✅ 이 카드만 기능 추가 (환경 선택) -->
       <section class="insight">
-        <h3>그린루틴 인사이트</h3>
-        <p class="small">평일 저녁 6–9시 전기/수도 사용량이 상대적으로 높아요. 이 시간대 팁을 확인해보세요.</p>
+        <h3>그린루틴이 본 @@님은...</h3>
+
+        <!-- 생활환경 선택 -->
+        <form id="envForm" class="env-form" aria-label="생활환경 선택">
+          <label class="env-field">
+            <span class="label">주거형태</span>
+            <select id="envHousing" required>
+              <option value="">선택</option>
+              <option value="원룸">원룸</option>
+              <option value="오피스텔">오피스텔</option>
+              <option value="아파트">아파트</option>
+              <option value="빌라/다가구">빌라/다가구</option>
+            </select>
+          </label>
+
+          <label class="env-field">
+            <span class="label">이중문</span>
+            <select id="envDoors">
+              <option value="">선택</option>
+              <option value="있음">있음</option>
+              <option value="없음">없음</option>
+            </select>
+          </label>
+
+          <label class="env-field">
+            <span class="label">창호</span>
+            <select id="envWindows">
+              <option value="">선택</option>
+              <option value="단창">단창</option>
+              <option value="이중창">이중창</option>
+              <option value="로이/단열">로이/단열</option>
+            </select>
+          </label>
+
+          <button type="submit" class="btn env-save">저장</button>
+        </form>
+
+        <!-- 선택 요약(자동 갱신) -->
+        <p id="envSummary" class="small" style="margin-top:6px">
+          선택한 환경을 바탕으로 팁과 분석을 개인화해드려요.
+        </p>
       </section>
+      <!-- /insight -->
 
       <section class="panel">
-        <h3>@@@님의 하루 에너지 사용량 그래프</h3>
+        <h3>@@님의 하루 에너지 사용량 그래프</h3>
         <div class="chart-line">라인 차트 영역</div>
       </section>
 
@@ -79,7 +123,7 @@
     <div class="d-hero">
       <div class="d-avatar">👤</div>
       <div>
-        <div class="d-name">@@@님</div>
+        <div class="d-name">@@님</div>
         <div class="d-email">aaa123@gmail.com</div>
       </div>
     </div>
@@ -100,9 +144,60 @@
     </div>
   </aside>
 
-  <!-- Scripts -->
+  <!-- 기존 스크립트 -->
   <script src="app3.js" defer></script>
+
+  <!-- ✅ 환경 선택 저장/요약 스크립트 (다른 구조는 변경 없음) -->
   <script>
+    (function(){
+      const $ = s => document.querySelector(s);
+      const form = $('#envForm');
+      if(!form) return;
+
+      const ho = $('#envHousing');
+      const dr = $('#envDoors');
+      const wi = $('#envWindows');
+      const out = $('#envSummary');
+      const KEY = 'envPrefs.v1';
+
+      function render(){
+        const h = ho.value || '주거형태 미선택';
+        const d = dr.value || '이중문 미선택';
+        const w = wi.value || '창호 미선택';
+        out.textContent = `${h} / ${d} / ${w} 기준으로 팁과 분석을 개인화해요.`;
+      }
+
+      function load(){
+        try{
+          const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+          if(saved.housing) ho.value = saved.housing;
+          if(saved.doors)   dr.value = saved.doors;
+          if(saved.windows) wi.value = saved.windows;
+        }catch(e){}
+        render();
+      }
+
+      form.addEventListener('submit', e=>{
+        e.preventDefault();
+        const prefs = {
+          housing: ho.value,
+          doors: dr.value,
+          windows: wi.value,
+          ts: Date.now()
+        };
+        localStorage.setItem(KEY, JSON.stringify(prefs));
+        render();
+        // 다른 모듈에서 필요하면 청취할 수 있게 이벤트 발행
+        window.dispatchEvent(new CustomEvent('env:changed', { detail: prefs }));
+      });
+
+      ['change','input'].forEach(ev=>{
+        [ho, dr, wi].forEach(el => el.addEventListener(ev, render));
+      });
+
+      document.addEventListener('DOMContentLoaded', load);
+    })();
+
     // 드로어 열고/닫기 (페이지 진입 시 닫힘 상태 보장)
     (function(){
       const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
@@ -113,7 +208,7 @@
       d.getElementById('openDrawer2')?.addEventListener('click', open);
       sc.addEventListener('click', close);
       d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
-      d.addEventListener('DOMContentLoaded', close); // 혹시 이전 화면에서 열린 상태로 넘어온 경우 닫기
+      d.addEventListener('DOMContentLoaded', close);
     })();
   </script>
 </body>

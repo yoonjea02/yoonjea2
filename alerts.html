@@ -5,6 +5,50 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>알림</title>
   <link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+
+  <!-- ✅ alerts 페이지 전용: 제목 1줄 + 둥근 배지 오버라이드 -->
+  <style>
+    /* 제목을 항상 한 줄로 (넘치면 … 처리, 살짝 작은 크기) */
+    body[data-page="alerts"] .list-item .title{
+      font-size: var(--fs-14);
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: -0.2px;
+      line-height: 1.25;
+      display:inline-block;
+      max-width: 100%;
+    }
+
+    /* 배지 더 둥글고 부드럽게 */
+    body[data-page="alerts"] .badge{
+      border: none !important;
+      border-radius: 9999px !important;
+      padding: 6px 12px !important;
+      font-size: var(--fs-12) !important;
+      line-height: 1 !important;
+      box-shadow:
+        inset 0 0 0 1px rgba(0,0,0,.04),
+        0 2px 6px rgba(15,23,42,.06);
+    }
+    body[data-page="alerts"] .badge.info{
+      background: rgba(59,130,246,.14) !important; /* 팁 */
+      color: #0ea5e9 !important;
+    }
+    body[data-page="alerts"] .badge.warn{
+      background: rgba(234,88,12,.14) !important;  /* 알림 */
+      color: #f97316 !important;
+    }
+  </style>
+  <style>
+  /* alerts: 아이콘 옆 텍스트에만 살짝 왼쪽 여백 부여 */
+  body[data-page="alerts"] .list-item > div:nth-of-type(2){
+    padding-left: 8px; /* 필요하면 6~12px 사이로만 조절 */
+  }
+</style>
+
 </head>
 <body data-page="alerts">
   <div class="wrap">
@@ -30,7 +74,7 @@
         <article class="list-item">
           <div class="icon">🔔</div>
           <div>
-            <div><strong>대기전력 절감: 멀티탭 스케줄 OFF 추천</strong></div>
+            <div><strong class="title">대기전력 절감: 멀티탭 스케줄 OFF 추천</strong></div>
             <div class="small">2일 전 · 절약 팁</div>
           </div>
           <span class="badge info">팁</span>
@@ -39,7 +83,7 @@
         <article class="list-item">
           <div class="icon">🔔</div>
           <div>
-            <div><strong>센서 연결 상태가 잠시 불안정</strong></div>
+            <div><strong class="title">센서 연결 상태가 잠시 불안정</strong></div>
             <div class="small">3일 전 · 시스템</div>
           </div>
           <span class="badge warn">알림</span>
@@ -49,12 +93,11 @@
       <section class="stats-card">
         <h3 style="margin:0 0 10px">이번 달 알림 통계</h3>
         <div class="stat-grid">
-          <div class="stat"><div class="emoji">🔔</div><div class="value">18</div><div class="label">전체</div></div>
-          <div class="stat"><div class="emoji">✅</div><div class="value">15</div><div class="label">확인</div></div>
+          <div class="stat"><div class="emoji">🔔</div><div class="value">6</div><div class="label">전체</div></div>
+          <div class="stat"><div class="emoji">✅</div><div class="value">5</div><div class="label">확인</div></div>
           <div class="stat"><div class="emoji">⚠️</div><div class="value">2</div><div class="label">주의</div></div>
-          <div class="stat"><div class="emoji">💡</div><div class="value">6</div><div class="label">절약 팁</div></div>
-          <div class="stat"><div class="emoji">ℹ️</div><div class="value">3</div><div class="label">안내</div></div>
-          <div class="stat"><div class="emoji">🕒</div><div class="value">1.1h</div><div class="label">평균 응답</div></div>
+          <div class="stat"><div class="emoji">💡</div><div class="value">4</div><div class="label">절약 팁</div></div>
+          <div class="stat"><div class="emoji">ℹ️</div><div class="value">0</div><div class="label">안내</div></div>
         </div>
       </section>
     </main>
@@ -76,7 +119,7 @@
   <aside class="drawer" id="drawer" aria-label="전체 메뉴">
     <div class="d-hero">
       <div class="d-avatar">👤</div>
-      <div><div class="d-name">@@@님</div><div class="d-email">aaa123@gmail.com</div></div>
+      <div><div class="d-name">@@님</div><div class="d-email">aaa123@gmail.com</div></div>
     </div>
     <div class="d-grid">
       <a class="d-btn" href="profile.html"><div class="emoji">👤</div><div class="label">정보 관리</div></a>
