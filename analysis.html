@@ -48,7 +48,7 @@
 
           <label class="env-field">
             <span class="label">이중문</span>
-            <select id="envDoors">
+            <select id="envDoors" required>
               <option value="">선택</option>
               <option value="있음">있음</option>
               <option value="없음">없음</option>
@@ -57,7 +57,7 @@
 
           <label class="env-field">
             <span class="label">창호</span>
-            <select id="envWindows">
+            <select id="envWindows" required>
               <option value="">선택</option>
               <option value="단창">단창</option>
               <option value="이중창">이중창</option>
@@ -81,18 +81,17 @@
       </section>
 
       <section class="stack" style="gap:12px">
+        <!-- ⬇⬇⬇  여긴 UL에 id만 부여(표시는 그대로 유지) -->
         <article class="tip-card">
           <h4>전기</h4>
-          <ul>
-            <li>에어컨 온도를 2도 높이면 월 약 7,000원 절약</li>
-            <li>외출 시 TV/셋톱박스 절전모드 설정</li>
+          <ul id="elecTips">
+            <li>불러오는 중…</li>
           </ul>
         </article>
         <article class="tip-card">
           <h4>가스</h4>
-          <ul>
-            <li>보일러 외출 모드로 전환 시 하루 약 500원 절약</li>
-            <li>온수 온도 2도 낮추면 월 약 4,000원 절감</li>
+          <ul id="gasTips">
+            <li>불러오는 중…</li>
           </ul>
         </article>
       </section>
@@ -140,24 +139,38 @@
   <!-- 기존 스크립트 -->
   <script src="app3.js" defer></script>
 
-  <!-- ✅ 환경 선택 저장/요약 스크립트 (다른 구조는 변경 없음) -->
+  <!-- ✅ 환경 선택 저장/요약 + API 연동 (POST /api/ai/preference) -->
   <script>
     (function(){
-      const $ = s => document.querySelector(s);
-      const form = $('#envForm');
-      if(!form) return;
+      // ★★★ 여기 2곳만 프로젝트 환경에 맞게 바꾸세요 ★★★
+      const API_ORIGIN = "http://localhost:8080";      // ★ 수정: 백엔드 주소/포트
+      const USER_ID    = 1;                            // ★ 수정: 로그인된 사용자 ID
+      // ──────────────────────────────────────────────────────────
+      const ENDPOINT   = API_ORIGIN + "/api/ai/preference";
 
+      const $ = s => document.querySelector(s);
+      const form = $('#envForm'); if(!form) return;
       const ho = $('#envHousing');
       const dr = $('#envDoors');
       const wi = $('#envWindows');
       const out = $('#envSummary');
       const KEY = 'envPrefs.v1';
 
+      // API에서 허용하는 값(서버 400 방지용)
+      const ALLOWED_HOUSING = ["원룸","오피스텔","아파트","빌라","다주택"];
+      const ALLOWED_WINDOW  = ["단창","이중창","로이","단열"];
+
+      // UI값→API값 매핑
+      const mapHousing = v => (v === "빌라/다가구" ? "빌라" : v);
+      const mapWindow  = v => (v === "로이/단열"   ? "로이" : v);
+      const mapDoor    = v => (v === "있음");
+
       function render(){
         const h = ho.value || '주거형태 미선택';
         const d = dr.value || '이중문 미선택';
         const w = wi.value || '창호 미선택';
         out.textContent = `${h} / ${d} / ${w} 기준으로 팁과 분석을 개인화해요.`;
+        out.style.color = "";
       }
 
       function load(){
@@ -166,22 +179,63 @@
           if(saved.housing) ho.value = saved.housing;
           if(saved.doors)   dr.value = saved.doors;
           if(saved.windows) wi.value = saved.windows;
-        }catch(e){}
+        }catch{}
         render();
       }
 
-      form.addEventListener('submit', e=>{
+      async function postPreference(payload){
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (res.ok) return;                 // 200 OK
+        if (res.status === 400) throw new Error("형식 오류(400)");
+        throw new Error("서버 오류(" + res.status + ")");
+      }
+
+      form.addEventListener('submit', async (e)=>{
         e.preventDefault();
-        const prefs = {
-          housing: ho.value,
-          doors: dr.value,
-          windows: wi.value,
-          ts: Date.now()
+
+        if (!ho.value || !dr.value || !wi.value) {
+          out.textContent = "모든 항목을 선택해 주세요.";
+          out.style.color = "#e11d48";
+          return;
+        }
+
+        const payload = {
+          userId: USER_ID,
+          housingType: mapHousing(ho.value),
+          hasDoubleDoor: mapDoor(dr.value),
+          windowType: mapWindow(wi.value)
         };
-        localStorage.setItem(KEY, JSON.stringify(prefs));
-        render();
-        // 다른 모듈에서 필요하면 청취할 수 있게 이벤트 발행
-        window.dispatchEvent(new CustomEvent('env:changed', { detail: prefs }));
+
+        if (!ALLOWED_HOUSING.includes(payload.housingType) ||
+            !ALLOWED_WINDOW.includes(payload.windowType)) {
+          out.textContent = "허용되지 않은 값입니다. 다시 선택해 주세요.";
+          out.style.color = "#e11d48";
+          return;
+        }
+
+        out.textContent = "저장 중…";
+        out.style.color = "";
+
+        try{
+          await postPreference(payload);
+          localStorage.setItem(KEY, JSON.stringify({
+            housing: ho.value, doors: dr.value, windows: wi.value, ts: Date.now()
+          }));
+          render();
+          out.textContent = "저장 완료! 선택 정보를 바탕으로 개인화됩니다.";
+          window.dispatchEvent(new CustomEvent('env:changed', { detail: payload }));
+        }catch(err){
+          console.error(err);
+          out.style.color = "#e11d48";
+          out.textContent = (err.message.includes("형식"))
+            ? "요청 형식 오류: 선택값을 다시 확인해 주세요."
+            : "네트워크/서버 오류: 백엔드가 실행 중이고 CORS가 허용되었는지 확인해 주세요.";
+        }
       });
 
       ['change','input'].forEach(ev=>{
@@ -202,6 +256,74 @@
       sc.addEventListener('click', close);
       d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
       d.addEventListener('DOMContentLoaded', close);
+    })();
+  </script>
+
+  <!-- ✅ 맞춤 팁 조회 연동 (GET /api/ai/tips) -->
+  <script>
+    (function(){
+      // ★★★ 여기 3곳만 프로젝트 환경에 맞게 바꾸세요 ★★★
+      const API_ORIGIN  = "http://localhost:8080"; // ★ 수정: 백엔드 주소/포트
+      const USER_ID     = 1;                       // ★ 수정: 로그인된 사용자 ID
+      const ELEC_COUNT  = 3;                       // ★ 수정: 전기 팁 개수
+      const GAS_COUNT   = 3;                       // ★ 수정: 가스 팁 개수
+      // ─────────────────────────────────────────────
+
+      const $elec = document.getElementById('elecTips');
+      const $gas  = document.getElementById('gasTips');
+      if (!$elec || !$gas) return;
+
+      function renderList(ul, items){
+        ul.innerHTML = "";
+        items.forEach(t => {
+          const li = document.createElement('li');
+          li.textContent = String(t);
+          ul.appendChild(li);
+        });
+      }
+
+      function setLoading(){
+        $elec.innerHTML = "<li>불러오는 중…</li>";
+        $gas.innerHTML  = "<li>불러오는 중…</li>";
+      }
+
+      async function fetchTips(){
+        setLoading();
+        const url = `${API_ORIGIN}/api/ai/tips?userId=${encodeURIComponent(USER_ID)}&elecCount=${encodeURIComponent(ELEC_COUNT)}&gasCount=${encodeURIComponent(GAS_COUNT)}`;
+        try{
+          const res = await fetch(url, { method: "GET" });
+
+          if (res.status === 400) {
+            renderList($elec, ["요청 형식 오류로 팁을 불러오지 못했습니다."]);
+            renderList($gas , ["요청 형식 오류로 팁을 불러오지 못했습니다."]);
+            return;
+          }
+          if (!res.ok) {
+            renderList($elec, ["서버 오류로 팁을 불러오지 못했습니다."]);
+            renderList($gas , ["서버 오류로 팁을 불러오지 못했습니다."]);
+            return;
+          }
+
+          /* 기대 응답 예시
+            { "ELEC": ["…","…"], "GAS": ["…","…"] }
+          */
+          const data = await res.json();
+          const elecTips = Array.isArray(data.ELEC) ? data.ELEC : [];
+          const gasTips  = Array.isArray(data.GAS)  ? data.GAS  : [];
+
+          renderList($elec, elecTips.length ? elecTips : ["전기 절약 팁이 아직 없습니다."]);
+          renderList($gas , gasTips.length  ? gasTips  : ["가스 절약 팁이 아직 없습니다."]);
+        }catch(err){
+          console.error(err);
+          renderList($elec, ["네트워크 오류로 팁을 불러오지 못했습니다."]);
+          renderList($gas , ["네트워크 오류로 팁을 불러오지 못했습니다."]);
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', fetchTips);
+
+      // 환경 변경 시 팁을 다시 받고 싶으면 아래 리스너 유지
+      window.addEventListener('env:changed', fetchTips);
     })();
   </script>
 </body>
