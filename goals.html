@@ -6,11 +6,11 @@
   <title>실시간 요금</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
-
+  <!-- 환경 주입 -->
+  <script src="env.js"></script>
 </head>
 <body data-page="goals">
   <div class="wrap">
-    <!-- Header -->
     <header>
       <div class="top-bar">
         <div class="time">--:--</div>
@@ -26,30 +26,29 @@
       </div>
     </header>
 
-    <!-- Main -->
     <main class="section stack">
       <section class="panel">
         <h3>절약 목표 한눈에 파악하기</h3>
 
-        <!-- 절약 목표 카드 (제목 1줄 + 우측 목표/남은금액 2줄) -->
+        <!-- 절약 목표 카드 -->
         <div class="goal-card">
           <div class="goal-head" style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
             <h3 class="goal-title" style="white-space:nowrap;margin:0;">이번 달 절약 목표</h3>
             <div class="goal-side" style="display:flex;flex-direction:column;align-items:flex-end;line-height:1.2;">
-              <span class="goal-meta" style="white-space:nowrap;">목표: <span id="goalTarget">30,000 원</span></span>
-              <span class="goal-meta" style="white-space:nowrap;">남은 금액 <span id="goalRemain">25,600 원</span></span>
+              <span class="goal-meta" style="white-space:nowrap;">목표: <span id="goalTarget">- 원</span></span>
+              <span class="goal-meta" style="white-space:nowrap;">남은 금액 <span id="goalRemain">- 원</span></span>
             </div>
           </div>
 
           <div class="progress">
-            <div class="progress-track"><div id="goalFill" class="progress-fill" style="width:15%"></div></div>
+            <div class="progress-track"><div id="goalFill" class="progress-fill" style="width:0%"></div></div>
             <div class="progress-label">
-              <span id="savedNow">이번 달 절감액: 4,400 원</span>
-              <span id="goalPct">15%</span>
+              <span id="savedNow">이번 달 절감액: - 원</span>
+              <span id="goalPct">0%</span>
             </div>
           </div>
           <form class="goal-form" id="goalForm">
-            <input id="goalInput" class="input" type="number" min="0" step="1000" placeholder="목표 금액 (예: 50000)" value="30000" />
+            <input id="goalInput" class="input" type="number" min="0" step="1000" placeholder="목표 금액 (예: 50000)" />
             <div class="goal-actions">
               <button type="submit" class="btn">저장</button>
               <button type="button" id="goalClear" class="btn">초기화</button>
@@ -57,34 +56,33 @@
           </form>
         </div>
 
-        <!-- (NEW) 근처 유저 비교 문구 + 미니 막대그래프 -->
+        <!-- 근처 유저 비교 -->
         <section class="neighbor-note">
           <p class="neighbor-title">
             근처 유저 중 <strong class="hl">@@님</strong>은 에너지 절약 성공률
-            <strong class="hl">상위 7%예요!</strong>
+            <strong class="hl" id="rankTopText">상위 -%예요!</strong>
           </p>
           <div class="mini-colchart" aria-label="근처 유저 비교 그래프">
-            <div class="col self" style="--h:84%"><span class="val">84%</span><span class="lab">@@@님</span></div>
-            <div class="col others" style="--h:28%"><span class="val">28%</span><span class="lab">안서동 유저</span></div>
+            <div class="col self"   id="colSelf"   style="--h:0%"><span class="val" id="selfVal">0%</span><span class="lab">나</span></div>
+            <div class="col others" id="colOthers" style="--h:0%"><span class="val" id="avgVal">0%</span><span class="lab" id="areaLab">지역 평균</span></div>
           </div>
         </section>
 
-        <!-- (NEW) 종목별 목표 설정금액 달성률 -->
+        <!-- 종목별 목표 설정금액 달성률 -->
         <section class="cat-goals">
-          <!-- 전기 -->
-          <div class="goal-line" data-now="5380" data-target="10000">
+          <div class="goal-line" data-cat="elec" data-now="0" data-target="1">
             <div class="gl-head">
               <div class="label">⚡ 전기</div>
-              <div class="val nowrap"><span class="now">5,380</span> / <span class="target">10,000</span> 원</div>
+              <div class="val nowrap"><span class="now">0</span> / <span class="target">0</span> 원</div>
             </div>
             <div class="gl-meter"><div class="gl-fill"></div></div>
             <div class="gl-pct nowrap">0%</div>
           </div>
-          <!-- 가스 -->
-          <div class="goal-line" data-now="20000" data-target="30000">
+
+          <div class="goal-line" data-cat="gas" data-now="0" data-target="1">
             <div class="gl-head">
               <div class="label">🔥 가스</div>
-              <div class="val nowrap"><span class="now">20,000</span> / <span class="target">30,000</span> 원</div>
+              <div class="val nowrap"><span class="now">0</span> / <span class="target">0</span> 원</div>
             </div>
             <div class="gl-meter"><div class="gl-fill"></div></div>
             <div class="gl-pct nowrap">0%</div>
@@ -93,7 +91,6 @@
       </section>
     </main>
 
-    <!-- Tabs -->
     <footer>
       <div class="tabs">
         <a class="tab" href="index.html">홈</a>
@@ -105,7 +102,6 @@
     </footer>
   </div>
 
-  <!-- Drawer (공통) -->
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-label="전체 메뉴">
     <div class="d-hero">
@@ -124,33 +120,135 @@
     <div class="d-actions"><a href="#">로그아웃</a><a href="#">탈퇴하기</a></div>
   </aside>
 
-  <!-- (NEW) 달성률 계산 스크립트 -->
+  <!-- 숫자 포맷 & 진행바 계산(레이아웃 변경 없음) -->
+  <script>
+    function fillGoalLine(row, now, target){
+      const fmt = new Intl.NumberFormat('ko-KR');
+      now = Number(now||0); target = Math.max(1, Number(target||0));
+      const pct = Math.min(100, Math.round((now/target)*1000)/10);
+      row.dataset.now = String(now); row.dataset.target = String(target);
+      row.querySelector('.now').textContent = fmt.format(now);
+      row.querySelector('.target').textContent = fmt.format(target);
+      row.querySelector('.gl-pct').textContent = pct + '%';
+      row.querySelector('.gl-fill').style.width = pct + '%';
+    }
+  </script>
+
+  <!-- API 연결 -->
   <script>
     (function(){
-      // 숫자 포맷터
+      const { API_ORIGIN='', USER_ID, AREA } = window.__ENV; // env.js 주입값
       const fmt = new Intl.NumberFormat('ko-KR');
+      const ym = (()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); })();
 
-      // 종목별 달성률 채우기
-      document.querySelectorAll('.goal-line').forEach(row=>{
-        const now = Number(row.dataset.now || 0);
-        const target = Math.max(1, Number(row.dataset.target || 0)); // 0으로 나눔 방지
-        const pct = Math.min(100, Math.round((now/target)*1000)/10); // 소수 1자리
+      // 1) 월 목표 카드 GET /api/month-goal?userId=&ym=
+      async function fetchMonthGoal(){
+        try{
+          const res = await fetch(`${API_ORIGIN}/api/month-goal?userId=${encodeURIComponent(USER_ID)}&ym=${encodeURIComponent(ym)}`);
+          if (res.status === 400) { alert('요청 형식 오류(YYYY-MM)'); return; }
+          if (!res.ok) return;
+          const d = await res.json();
+          const target  = Number(d.goalWon||0);
+          const remain  = Number(d.remainingWon||0);
+          const saved   = Number(d.savedWon||0);
+          const percent = Math.max(0, Math.min(100, Number(d.savingPercent||0)));
 
-        // 표시 업데이트
-        const nowEl = row.querySelector('.now');
-        const tarEl = row.querySelector('.target');
-        const pctEl = row.querySelector('.gl-pct');
-        if (nowEl) nowEl.textContent = fmt.format(now);
-        if (tarEl) tarEl.textContent = fmt.format(target);
-        if (pctEl) pctEl.textContent = pct + '%';
+          document.getElementById('goalTarget').textContent = fmt.format(target) + ' 원';
+          document.getElementById('goalRemain').textContent = fmt.format(remain) + ' 원';
+          document.getElementById('savedNow').textContent   = '이번 달 절감액: ' + fmt.format(saved) + ' 원';
+          document.getElementById('goalPct').textContent    = (Math.round(percent*10)/10).toString().replace(/\.0$/,'') + '%';
+          document.getElementById('goalFill').style.width   = percent + '%';
 
-        const fill = row.querySelector('.gl-fill');
-        if (fill) fill.style.width = pct + '%';
+          // 현재 목표값을 입력창에 세팅
+          const input = document.getElementById('goalInput');
+          if (input) input.value = target ? String(target) : '';
+        }catch(e){ console.warn(e); }
+      }
+
+      // 목표 저장 POST /api/month-goal   { userId, ym, goalWon }
+      document.getElementById('goalForm')?.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const input = document.getElementById('goalInput');
+        const val = Math.max(0, Number(input?.value||0));
+        try{
+          const res = await fetch(`${API_ORIGIN}/api/month-goal`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ userId: USER_ID, ym, goalWon: Math.round(val) })
+          });
+          if (res.status === 400) { alert('요청 형식 오류(기간/금액)'); return; }
+          if (!res.ok) { alert('저장 실패'); return; }
+          await fetchMonthGoal();
+        }catch(err){ console.warn(err); }
+      });
+
+      // 목표 초기화 POST /api/month-goal/reset   { userId, ym }
+      document.getElementById('goalClear')?.addEventListener('click', async ()=>{
+        try{
+          const res = await fetch(`${API_ORIGIN}/api/month-goal/reset`, {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ userId: USER_ID, ym })
+          });
+          if (!res.ok) { // 초기화 API가 없으면 UI만 초기화
+            console.warn('reset api not ok, fallback to UI reset');
+          }
+        }catch(e){ console.warn(e); }
+        // UI 초기화
+        const input = document.getElementById('goalInput');
+        if (input) input.value = '';
+        document.getElementById('goalFill').style.width = '0%';
+        document.getElementById('goalPct').textContent = '0%';
+        document.getElementById('goalTarget').textContent = '- 원';
+        document.getElementById('goalRemain').textContent = '- 원';
+        document.getElementById('savedNow').textContent = '이번 달 절감액: - 원';
+      });
+
+      // 2) 랭킹/성공률 GET /api/ranking?userId=&area=&ym=
+      async function fetchRanking(){
+        try{
+          const res = await fetch(`${API_ORIGIN}/api/ranking?userId=${encodeURIComponent(USER_ID)}&area=${encodeURIComponent(AREA)}&ym=${encodeURIComponent(ym)}`);
+          if (!res.ok) return;
+          const d = await res.json(); // { myRate, areaAvgRate, topPercent, area, ... }
+          const self = Math.max(0, Math.min(100, Number(d.myRate||0)));
+          const avg  = Math.max(0, Math.min(100, Number(d.areaAvgRate||0)));
+          const top  = Number(d.topPercent||0);
+
+          document.getElementById('rankTopText').textContent = `상위 ${top}%예요!`;
+          document.getElementById('colSelf').style.setProperty('--h', self+'%');
+          document.getElementById('selfVal').textContent = self.toFixed(0) + '%';
+          document.getElementById('colOthers').style.setProperty('--h', avg+'%');
+          document.getElementById('avgVal').textContent = avg.toFixed(0) + '%';
+          document.getElementById('areaLab').textContent = (d.area || AREA) + ' 유저';
+        }catch(e){ console.warn(e); }
+      }
+
+      // 3) 하단 종목별 목표 그래프 GET /api/savebars?userId=&ym=
+      async function fetchSavebars(){
+        try{
+          const res = await fetch(`${API_ORIGIN}/api/savebars?userId=${encodeURIComponent(USER_ID)}&ym=${encodeURIComponent(ym)}`);
+          if (!res.ok) return;
+          const arr = await res.json(); // [{category:'elec'|'gas', target, used, ...}, ...]
+          const byCat = Object.fromEntries((arr||[]).map(it=>[String(it.category||'').toLowerCase(), it]));
+          document.querySelectorAll('.goal-line').forEach(row=>{
+            const cat = row.dataset.cat;
+            const d = byCat[cat];
+            if (!d) return;
+            fillGoalLine(row, Number(d.used||0), Number(d.target||1));
+          });
+        }catch(e){ console.warn(e); }
+      }
+
+      // 초기 로드
+      document.addEventListener('DOMContentLoaded', ()=>{
+        fetchMonthGoal();
+        fetchRanking();
+        fetchSavebars();
       });
     })();
   </script>
 
-  <!-- Drawer script (기존) -->
+  <!-- Drawer (기존) -->
   <script>
     (function(){
       const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');

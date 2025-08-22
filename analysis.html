@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>AI 분석</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Pretendard Variable -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+  <script src="env.js"></script>
+  <style>
+    .chart-line { position: relative; min-height: 220px; }
+    .chart-line .chart-empty{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:rgba(0,0,0,.6); font-size:14px; text-align:center; padding:8px; }
+    .chart-line .chart-svg{ width:100%; height:100%; display:block; }
+  </style>
 </head>
 <body data-page="analytics">
   <div class="wrap">
-    <!-- Header -->
     <header>
       <div class="top-bar">
         <div class="time">19:31</div>
@@ -26,14 +30,11 @@
       </div>
     </header>
 
-    <!-- Main -->
     <main class="section stack">
-
-      <!-- ✅ 이 카드만 기능 추가 (환경 선택) -->
+      <!-- 환경 선택 -->
       <section class="insight">
         <h3>그린루틴이 본 @@님은...</h3>
 
-        <!-- 생활환경 선택 -->
         <form id="envForm" class="env-form" aria-label="생활환경 선택">
           <label class="env-field">
             <span class="label">주거형태</span>
@@ -68,36 +69,30 @@
           <button type="submit" class="btn env-save">저장</button>
         </form>
 
-        <!-- 선택 요약(자동 갱신) -->
         <p id="envSummary" class="small" style="margin-top:6px">
           선택한 환경을 바탕으로 팁과 분석을 개인화해드려요.
         </p>
       </section>
-      <!-- /insight -->
 
+      <!-- 라인차트 -->
       <section class="panel">
         <h3>@@님의 하루 에너지 사용량 그래프</h3>
         <div class="chart-line">라인 차트 영역</div>
       </section>
 
+      <!-- 맞춤 팁 -->
       <section class="stack" style="gap:12px">
-        <!-- ⬇⬇⬇  여긴 UL에 id만 부여(표시는 그대로 유지) -->
         <article class="tip-card">
           <h4>전기</h4>
-          <ul id="elecTips">
-            <li>불러오는 중…</li>
-          </ul>
+          <ul id="elecTips"><li>불러오는 중…</li></ul>
         </article>
         <article class="tip-card">
           <h4>가스</h4>
-          <ul id="gasTips">
-            <li>불러오는 중…</li>
-          </ul>
+          <ul id="gasTips"><li>불러오는 중…</li></ul>
         </article>
       </section>
     </main>
 
-    <!-- Tabs -->
     <footer>
       <div class="tabs">
         <a class="tab" href="index.html" aria-label="홈">홈</a>
@@ -109,7 +104,6 @@
     </footer>
   </div>
 
-  <!-- Drawer (홈과 동일한 콘텐츠) -->
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-label="전체 메뉴">
     <div class="d-hero">
@@ -136,119 +130,213 @@
     </div>
   </aside>
 
-  <!-- 기존 스크립트 -->
-  <script src="app3.js" defer></script>
-
-  <!-- ✅ 환경 선택 저장/요약 + API 연동 (POST /api/ai/preference) -->
+  <!-- 환경 저장(POST /api/ai/preference) + 저장 성공시 팁 GET -->
   <script>
     (function(){
-      // ★★★ 여기 2곳만 프로젝트 환경에 맞게 바꾸세요 ★★★
-      const API_ORIGIN = "http://localhost:8080";      // ★ 수정: 백엔드 주소/포트
-      const USER_ID    = 1;                            // ★ 수정: 로그인된 사용자 ID
-      // ──────────────────────────────────────────────────────────
-      const ENDPOINT   = API_ORIGIN + "/api/ai/preference";
-
+      const { API_ORIGIN='', USER_ID } = window.__ENV;
       const $ = s => document.querySelector(s);
+
       const form = $('#envForm'); if(!form) return;
-      const ho = $('#envHousing');
-      const dr = $('#envDoors');
-      const wi = $('#envWindows');
+      const ho = $('#envHousing'), dr = $('#envDoors'), wi = $('#envWindows');
       const out = $('#envSummary');
       const KEY = 'envPrefs.v1';
 
-      // API에서 허용하는 값(서버 400 방지용)
       const ALLOWED_HOUSING = ["원룸","오피스텔","아파트","빌라","다주택"];
       const ALLOWED_WINDOW  = ["단창","이중창","로이","단열"];
+      const mapHousing = v => (v==="빌라/다가구"?"빌라":v);
+      const mapWindow  = v => (v==="로이/단열"  ?"로이" :v);
+      const mapDoor    = v => (v==="있음");
 
-      // UI값→API값 매핑
-      const mapHousing = v => (v === "빌라/다가구" ? "빌라" : v);
-      const mapWindow  = v => (v === "로이/단열"   ? "로이" : v);
-      const mapDoor    = v => (v === "있음");
-
-      function render(){
-        const h = ho.value || '주거형태 미선택';
-        const d = dr.value || '이중문 미선택';
-        const w = wi.value || '창호 미선택';
-        out.textContent = `${h} / ${d} / ${w} 기준으로 팁과 분석을 개인화해요.`;
-        out.style.color = "";
+      function renderSummary(){
+        const h = ho.value || "주거형태 미선택";
+        const d = dr.value || "이중문 미선택";
+        const w = wi.value || "창호 미선택";
+        out.textContent = `${h} / ${d} / ${w} 기준으로 팁과 분석을 개인화해요.`; out.style.color="";
       }
-
-      function load(){
+      function loadSaved(){
         try{
-          const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
-          if(saved.housing) ho.value = saved.housing;
-          if(saved.doors)   dr.value = saved.doors;
-          if(saved.windows) wi.value = saved.windows;
+          const saved = JSON.parse(localStorage.getItem(KEY)||"{}");
+          if(saved.housing) ho.value=saved.housing;
+          if(saved.doors)   dr.value=saved.doors;
+          if(saved.windows) wi.value=saved.windows;
         }catch{}
-        render();
+        renderSummary();
       }
 
-      async function postPreference(payload){
-        const res = await fetch(ENDPOINT, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-
-        if (res.ok) return;                 // 200 OK
-        if (res.status === 400) throw new Error("형식 오류(400)");
-        throw new Error("서버 오류(" + res.status + ")");
+      async function savePreference(payload){
+        const url = `${API_ORIGIN}/api/ai/preference`;
+        const res = await fetch(url,{ method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) });
+        if(res.ok) return;
+        if(res.status===400) throw new Error("형식 오류(400)");
+        throw new Error("서버 오류("+res.status+")");
       }
 
-      form.addEventListener('submit', async (e)=>{
+      form.addEventListener("submit", async (e)=>{
         e.preventDefault();
-
-        if (!ho.value || !dr.value || !wi.value) {
-          out.textContent = "모든 항목을 선택해 주세요.";
-          out.style.color = "#e11d48";
-          return;
+        if(!ho.value || !dr.value || !wi.value){
+          out.textContent="모든 항목을 선택해 주세요."; out.style.color="#e11d48"; return;
         }
-
         const payload = {
           userId: USER_ID,
           housingType: mapHousing(ho.value),
           hasDoubleDoor: mapDoor(dr.value),
           windowType: mapWindow(wi.value)
         };
-
-        if (!ALLOWED_HOUSING.includes(payload.housingType) ||
-            !ALLOWED_WINDOW.includes(payload.windowType)) {
-          out.textContent = "허용되지 않은 값입니다. 다시 선택해 주세요.";
-          out.style.color = "#e11d48";
-          return;
+        if(!ALLOWED_HOUSING.includes(payload.housingType) || !ALLOWED_WINDOW.includes(payload.windowType)){
+          out.textContent="허용되지 않은 값입니다. 다시 선택해 주세요."; out.style.color="#e11d48"; return;
         }
 
-        out.textContent = "저장 중…";
-        out.style.color = "";
-
+        out.textContent="저장 중…"; out.style.color="";
         try{
-          await postPreference(payload);
-          localStorage.setItem(KEY, JSON.stringify({
-            housing: ho.value, doors: dr.value, windows: wi.value, ts: Date.now()
-          }));
-          render();
-          out.textContent = "저장 완료! 선택 정보를 바탕으로 개인화됩니다.";
-          window.dispatchEvent(new CustomEvent('env:changed', { detail: payload }));
+          await savePreference(payload);
+          localStorage.setItem(KEY, JSON.stringify({ housing:ho.value, doors:dr.value, windows:wi.value, ts:Date.now() }));
+          renderSummary();
+          out.textContent="저장 완료! 선택 정보를 바탕으로 개인화됩니다.";
+          if(typeof window.fetchTips === "function") window.fetchTips();
         }catch(err){
           console.error(err);
-          out.style.color = "#e11d48";
-          out.textContent = (err.message.includes("형식"))
+          out.style.color="#e11d48";
+          out.textContent = err.message.includes("형식")
             ? "요청 형식 오류: 선택값을 다시 확인해 주세요."
-            : "네트워크/서버 오류: 백엔드가 실행 중이고 CORS가 허용되었는지 확인해 주세요.";
+            : "네트워크/서버 오류: 백엔드 실행/CORS 허용을 확인해 주세요.";
         }
       });
 
-      ['change','input'].forEach(ev=>{
-        [ho, dr, wi].forEach(el => el.addEventListener(ev, render));
-      });
-
-      document.addEventListener('DOMContentLoaded', load);
+      ["change","input"].forEach(ev=>[ho,dr,wi].forEach(el=>el.addEventListener(ev, renderSummary)));
+      document.addEventListener("DOMContentLoaded", loadSaved);
     })();
+  </script>
 
-    // 드로어 열고/닫기 (페이지 진입 시 닫힘 상태 보장)
+  <!-- 맞춤 팁 조회 (GET /api/ai/tips?userId=&elecCount=&gasCount=) -->
+  <script>
+    (function(){
+      const { API_ORIGIN='', USER_ID } = window.__ENV;
+      const ELEC_COUNT = 3, GAS_COUNT = 3;
+      const $elec = document.getElementById("elecTips");
+      const $gas  = document.getElementById("gasTips");
+      if(!$elec || !$gas) return;
+
+      function renderList(ul, items){
+        ul.innerHTML = "";
+        (items && items.length ? items : ["내용이 없습니다."]).forEach(t=>{
+          const li=document.createElement("li"); li.textContent=String(t); ul.appendChild(li);
+        });
+      }
+      function setLoading(){ $elec.innerHTML="<li>불러오는 중…</li>"; $gas.innerHTML="<li>불러오는 중…</li>"; }
+
+      async function fetchTips(){
+        setLoading();
+        const url = `${API_ORIGIN}/api/ai/tips?userId=${encodeURIComponent(USER_ID)}&elecCount=${ELEC_COUNT}&gasCount=${GAS_COUNT}`;
+        try{
+          const res = await fetch(url);
+          if(res.status===400){ renderList($elec,["요청 형식 오류"]); renderList($gas,["요청 형식 오류"]); return; }
+          if(!res.ok){ renderList($elec,["서버 오류"]); renderList($gas,["서버 오류"]); return; }
+          const data = await res.json(); // { ELEC:[...], GAS:[...] }
+          renderList($elec, Array.isArray(data.ELEC)?data.ELEC:[]);
+          renderList($gas , Array.isArray(data.GAS )?data.GAS :[]);
+        }catch(err){
+          console.error(err);
+          renderList($elec,["네트워크 오류"]);
+          renderList($gas ,["네트워크 오류"]);
+        }
+      }
+      window.fetchTips = fetchTips;
+      document.addEventListener("DOMContentLoaded", fetchTips);
+    })();
+  </script>
+
+  <!-- 라인차트 (GET /api/ai/daily-line?userId=&date=YYYY-MM-DD), 30초 폴링 -->
+  <script>
+    (function(){
+      const { API_ORIGIN='', USER_ID } = window.__ENV;
+      const container = document.querySelector('.chart-line'); if(!container) return;
+
+      function todayYMD(){ const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+      function drawEmpty(msg){ container.innerHTML = `<div class="chart-empty">${msg}</div>`; }
+
+      function drawChart(labels, elec, gas){
+        container.innerHTML="";
+        const width=container.clientWidth||320, height=container.clientHeight||220;
+        const M={top:12,right:12,bottom:24,left:32}, iw=width-M.left-M.right, ih=height-M.top-M.bottom;
+        const maxY=Math.max(1,...elec,...gas), stepX=iw/Math.max(1,(labels.length-1));
+        const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+        svg.setAttribute("class","chart-svg"); svg.setAttribute("viewBox",`0 0 ${width} ${height}`); svg.setAttribute("preserveAspectRatio","none");
+
+        const gGrid=document.createElementNS(svg.namespaceURI,"g");
+        const gridCnt=4;
+        for(let i=0;i<=gridCnt;i++){
+          const y=M.top+ih-(ih*i/gridCnt);
+          const line=document.createElementNS(svg.namespaceURI,"line");
+          line.setAttribute("x1",M.left); line.setAttribute("y1",y);
+          line.setAttribute("x2",M.left+iw); line.setAttribute("y2",y);
+          line.setAttribute("stroke","rgba(0,0,0,0.08)"); line.setAttribute("stroke-width","1");
+          gGrid.appendChild(line);
+          const t=document.createElementNS(svg.namespaceURI,"text");
+          t.setAttribute("x",M.left-6); t.setAttribute("y",y+3); t.setAttribute("text-anchor","end");
+          t.setAttribute("font-size","10"); t.setAttribute("fill","rgba(0,0,0,0.55)"); t.textContent=Math.round(maxY*i/gridCnt);
+          gGrid.appendChild(t);
+        }
+        svg.appendChild(gGrid);
+
+        function pathFrom(arr){ return arr.map((v,i)=>{ const x=M.left+stepX*i, y=M.top+ih-((v/maxY)*ih); return `${i===0?'M':'L'}${x},${y}`; }).join(' '); }
+        const pElec=document.createElementNS(svg.namespaceURI,"path");
+        pElec.setAttribute("d",pathFrom(elec)); pElec.setAttribute("fill","none"); pElec.setAttribute("stroke","#22c55e"); pElec.setAttribute("stroke-width","2.5");
+        svg.appendChild(pElec);
+        const pGas=document.createElementNS(svg.namespaceURI,"path");
+        pGas.setAttribute("d",pathFrom(gas)); pGas.setAttribute("fill","none"); pGas.setAttribute("stroke","#06b6d4"); pGas.setAttribute("stroke-width","2.5");
+        svg.appendChild(pGas);
+
+        const tickEvery=Math.max(1,Math.ceil(labels.length/8));
+        const gAxis=document.createElementNS(svg.namespaceURI,"g");
+        for(let i=0;i<labels.length;i+=tickEvery){
+          const x=M.left+stepX*i;
+          const t=document.createElementNS(svg.namespaceURI,"text");
+          t.setAttribute("x",x); t.setAttribute("y",height-M.bottom+14);
+          t.setAttribute("text-anchor","middle"); t.setAttribute("font-size","10");
+          t.setAttribute("fill","rgba(0,0,0,0.55)"); t.textContent=labels[i];
+          gAxis.appendChild(t);
+        }
+        svg.appendChild(gAxis);
+
+        const legend=document.createElementNS(svg.namespaceURI,"g");
+        [["#22c55e","전기(kWh)"],["#06b6d4","가스(m³)"]].forEach(([color,label],idx)=>{
+          const x=M.left+idx*100, y=M.top+10;
+          const l=document.createElementNS(svg.namespaceURI,"line");
+          l.setAttribute("x1",x); l.setAttribute("y1",y); l.setAttribute("x2",x+18); l.setAttribute("y2",y);
+          l.setAttribute("stroke",color); l.setAttribute("stroke-width","3"); legend.appendChild(l);
+          const tx=document.createElementNS(svg.namespaceURI,"text");
+          tx.setAttribute("x",x+24); tx.setAttribute("y",y+3);
+          tx.setAttribute("font-size","11"); tx.setAttribute("fill","rgba(0,0,0,0.7)");
+          tx.textContent=label; legend.appendChild(tx);
+        });
+        svg.appendChild(legend);
+        container.appendChild(svg);
+      }
+
+      async function fetchLine(date=todayYMD()){
+        const url=`${API_ORIGIN}/api/ai/daily-line?userId=${encodeURIComponent(USER_ID)}&date=${encodeURIComponent(date)}`;
+        try{
+          const res=await fetch(url);
+          if(res.status===400){ drawEmpty("요청 형식 오류: 날짜는 YYYY-MM-DD 여야 합니다."); return; }
+          if(!res.ok){ drawEmpty("서버 오류로 라인 차트를 불러오지 못했습니다."); return; }
+          const data=await res.json();
+          const labels=Array.isArray(data.labels)?data.labels:[], elec=Array.isArray(data.elec)?data.elec:[], gas=Array.isArray(data.gas)?data.gas:[];
+          if(!labels.length || (!elec.length && !gas.length)){ drawEmpty("표시할 데이터가 없습니다."); return; }
+          drawChart(labels, elec, gas);
+        }catch(err){ console.error(err); drawEmpty("네트워크 오류로 라인 차트를 불러오지 못했습니다."); }
+      }
+
+      document.addEventListener("DOMContentLoaded", ()=>{ fetchLine(); setInterval(fetchLine, 30000); });
+      window.addEventListener("env:changed", ()=>fetchLine());
+      window.fetchLineForDate = fetchLine;
+    })();
+  </script>
+
+  <!-- 드로어 토글 -->
+  <script>
     (function(){
       const d=document, dr=d.getElementById('drawer'), sc=d.getElementById('scrim');
-      if(!dr || !sc) return;
+      if(!dr||!sc) return;
       const open=()=>{ dr.classList.add('open'); sc.classList.add('show'); };
       const close=()=>{ dr.classList.remove('open'); sc.classList.remove('show'); };
       d.getElementById('openDrawer')?.addEventListener('click', open);
@@ -256,74 +344,6 @@
       sc.addEventListener('click', close);
       d.addEventListener('keydown', e=>{ if(e.key==='Escape') close(); });
       d.addEventListener('DOMContentLoaded', close);
-    })();
-  </script>
-
-  <!-- ✅ 맞춤 팁 조회 연동 (GET /api/ai/tips) -->
-  <script>
-    (function(){
-      // ★★★ 여기 3곳만 프로젝트 환경에 맞게 바꾸세요 ★★★
-      const API_ORIGIN  = "http://localhost:8080"; // ★ 수정: 백엔드 주소/포트
-      const USER_ID     = 1;                       // ★ 수정: 로그인된 사용자 ID
-      const ELEC_COUNT  = 3;                       // ★ 수정: 전기 팁 개수
-      const GAS_COUNT   = 3;                       // ★ 수정: 가스 팁 개수
-      // ─────────────────────────────────────────────
-
-      const $elec = document.getElementById('elecTips');
-      const $gas  = document.getElementById('gasTips');
-      if (!$elec || !$gas) return;
-
-      function renderList(ul, items){
-        ul.innerHTML = "";
-        items.forEach(t => {
-          const li = document.createElement('li');
-          li.textContent = String(t);
-          ul.appendChild(li);
-        });
-      }
-
-      function setLoading(){
-        $elec.innerHTML = "<li>불러오는 중…</li>";
-        $gas.innerHTML  = "<li>불러오는 중…</li>";
-      }
-
-      async function fetchTips(){
-        setLoading();
-        const url = `${API_ORIGIN}/api/ai/tips?userId=${encodeURIComponent(USER_ID)}&elecCount=${encodeURIComponent(ELEC_COUNT)}&gasCount=${encodeURIComponent(GAS_COUNT)}`;
-        try{
-          const res = await fetch(url, { method: "GET" });
-
-          if (res.status === 400) {
-            renderList($elec, ["요청 형식 오류로 팁을 불러오지 못했습니다."]);
-            renderList($gas , ["요청 형식 오류로 팁을 불러오지 못했습니다."]);
-            return;
-          }
-          if (!res.ok) {
-            renderList($elec, ["서버 오류로 팁을 불러오지 못했습니다."]);
-            renderList($gas , ["서버 오류로 팁을 불러오지 못했습니다."]);
-            return;
-          }
-
-          /* 기대 응답 예시
-            { "ELEC": ["…","…"], "GAS": ["…","…"] }
-          */
-          const data = await res.json();
-          const elecTips = Array.isArray(data.ELEC) ? data.ELEC : [];
-          const gasTips  = Array.isArray(data.GAS)  ? data.GAS  : [];
-
-          renderList($elec, elecTips.length ? elecTips : ["전기 절약 팁이 아직 없습니다."]);
-          renderList($gas , gasTips.length  ? gasTips  : ["가스 절약 팁이 아직 없습니다."]);
-        }catch(err){
-          console.error(err);
-          renderList($elec, ["네트워크 오류로 팁을 불러오지 못했습니다."]);
-          renderList($gas , ["네트워크 오류로 팁을 불러오지 못했습니다."]);
-        }
-      }
-
-      document.addEventListener('DOMContentLoaded', fetchTips);
-
-      // 환경 변경 시 팁을 다시 받고 싶으면 아래 리스너 유지
-      window.addEventListener('env:changed', fetchTips);
     })();
   </script>
 </body>

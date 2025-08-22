@@ -5,54 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>알림</title>
   <link rel="stylesheet" href="style.css" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/variable/pretendardvariable-dynamic-subset.css" />
+  <script src="env.js"></script>
 
-  <!-- ✅ alerts 페이지 전용: 제목 1줄 + 둥근 배지 오버라이드 -->
+  <!-- alerts 전용 살짝 스타일(레이아웃 영향 없음) -->
   <style>
-    /* 제목을 항상 한 줄로 (넘치면 … 처리, 살짝 작은 크기) */
-    body[data-page="alerts"] .list-item .title{
-      font-size: var(--fs-14);
-      font-weight: 800;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      letter-spacing: -0.2px;
-      line-height: 1.25;
-      display:inline-block;
-      max-width: 100%;
-    }
-
-    /* 배지 더 둥글고 부드럽게 */
-    body[data-page="alerts"] .badge{
-      border: none !important;
-      border-radius: 9999px !important;
-      padding: 6px 12px !important;
-      font-size: var(--fs-12) !important;
-      line-height: 1 !important;
-      box-shadow:
-        inset 0 0 0 1px rgba(0,0,0,.04),
-        0 2px 6px rgba(15,23,42,.06);
-    }
-    body[data-page="alerts"] .badge.info{
-      background: rgba(59,130,246,.14) !important; /* 팁 */
-      color: #0ea5e9 !important;
-    }
-    body[data-page="alerts"] .badge.warn{
-      background: rgba(234,88,12,.14) !important;  /* 알림 */
-      color: #f97316 !important;
-    }
+    body[data-page="alerts"] .list-item .title{ font-size: var(--fs-14); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -0.2px; line-height: 1.25; display:inline-block; max-width: 100%; }
+    body[data-page="alerts"] .badge{ border:none!important; border-radius:9999px!important; padding:6px 12px!important; font-size:var(--fs-12)!important; line-height:1!important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.04), 0 2px 6px rgba(15,23,42,.06); }
+    body[data-page="alerts"] .badge.info{ background: rgba(59,130,246,.14)!important; color:#0ea5e9!important; }
+    body[data-page="alerts"] .badge.warn{ background: rgba(234,88,12,.14)!important;  color:#f97316!important; }
+    body[data-page="alerts"] .list-item > div:nth-of-type(2){ padding-left: 8px; }
   </style>
-  <style>
-  /* alerts: 아이콘 옆 텍스트에만 살짝 왼쪽 여백 부여 */
-  body[data-page="alerts"] .list-item > div:nth-of-type(2){
-    padding-left: 8px; /* 필요하면 6~12px 사이로만 조절 */
-  }
-</style>
-
 </head>
 <body data-page="alerts">
   <div class="wrap">
-    <!-- Header -->
     <header>
       <div class="top-bar">
         <div class="time">--:--</div>
@@ -68,9 +34,9 @@
       </div>
     </header>
 
-    <!-- Main -->
     <main class="section stack">
-      <div class="list">
+      <div class="list" id="alertList">
+        <!-- 기존 예시 2개 유지: 새 알림은 위에 prepend 됩니다 -->
         <article class="list-item">
           <div class="icon">🔔</div>
           <div>
@@ -102,7 +68,6 @@
       </section>
     </main>
 
-    <!-- Tabs -->
     <footer>
       <div class="tabs">
         <a class="tab" href="index.html">홈</a>
@@ -114,7 +79,7 @@
     </footer>
   </div>
 
-  <!-- Drawer (공통) -->
+  <!-- Drawer -->
   <div class="scrim" id="scrim"></div>
   <aside class="drawer" id="drawer" aria-label="전체 메뉴">
     <div class="d-hero">
@@ -133,6 +98,66 @@
     <div class="d-actions"><a href="#">로그아웃</a><a href="#">탈퇴하기</a></div>
   </aside>
 
+  <!-- API 연결 -->
+  <script>
+    (function(){
+      const { API_ORIGIN='', USER_ID } = window.__ENV;
+
+      // 미읽음 카운트 → 알림 아이콘 배지
+      async function paintBellUnread() {
+        try {
+          const res = await fetch(`${API_ORIGIN}/api/alerts/unread-count?userId=${USER_ID}`);
+          if (!res.ok) return;
+          const count = await res.json(); // 숫자
+          const bell = document.querySelector('.top-actions a[aria-label="알림"]');
+          if (!bell) return;
+          bell.querySelector('.bell-badge')?.remove();
+          if (count > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'bell-badge';
+            Object.assign(badge.style, { position:'absolute', top:'-4px', right:'-4px', minWidth:'16px', height:'16px', padding:'0 4px', borderRadius:'999px', background:'#ef4444', color:'#fff', fontSize:'11px', lineHeight:'16px', textAlign:'center', boxShadow:'0 1px 2px rgba(0,0,0,.2)' });
+            badge.textContent = String(count);
+            bell.style.position = 'relative';
+            bell.appendChild(badge);
+          }
+        } catch {}
+      }
+
+      // SSE 구독
+      function initSSE(){
+        if (document.body.dataset.page !== 'alerts') return;
+        const list = document.getElementById('alertList');
+        const es = new EventSource(`${API_ORIGIN}/api/alerts/stream?userId=${USER_ID}`);
+
+        function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));}
+
+        es.addEventListener('connected', ()=>console.log('SSE connected'));
+        es.addEventListener('alert', (e)=>{
+          try{
+            const a = JSON.parse(e.data);
+            const levelToClass = { INFO:'info', WARN:'warn', CRIT:'warn' };
+            const when = a.at ? new Date(a.at).toLocaleString() : '방금 전';
+            const item = document.createElement('article');
+            item.className = 'list-item';
+            item.innerHTML = `
+              <div class="icon">🔔</div>
+              <div>
+                <div><strong class="title">${escapeHtml(a.title||'알림')}</strong></div>
+                <div class="small">${when} · ${escapeHtml(a.category||'알림')}</div>
+              </div>
+              <span class="badge ${levelToClass[a.level]||'info'}">${escapeHtml(a.level||'INFO')}</span>
+            `;
+            list?.prepend(item);
+            paintBellUnread();
+          }catch(err){ console.warn('alert payload parse fail', err); }
+        });
+        es.onerror = e => console.warn('SSE error', e);
+      }
+
+      document.addEventListener('DOMContentLoaded', ()=>{ paintBellUnread(); initSSE(); });
+    })();
+  </script>
+
   <!-- Drawer script -->
   <script>
     (function(){
@@ -146,189 +171,5 @@
       d.addEventListener('DOMContentLoaded', close);
     })();
   </script>
-  <!-- 각 페이지(<head> or </body> 끝)에 추가 -->
-    <!-- api.js -->
-<script>
-// ★ 서버 주소만 너희 환경에 맞게 바꾸면 됨
-const BASE_URL = 'http://localhost:8080';
-
-// 공통 GET/POST 도우미 (중학생 설명)
-// - get(): url?쿼리=값 형태로 호출
-// - post(): JSON 바디로 호출
-async function _get(path, params = {}) {
-  const url = new URL(BASE_URL + path);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error(`GET ${url} -> ${res.status}`);
-  return res.json();
-}
-async function _post(path, body = {}) {
-  const res = await fetch(BASE_URL + path, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify(body),
-  });
-  if (!res.ok) throw new Error(`POST ${path} -> ${res.status}`);
-  return res.json();
-}
-
-// ===== 알림 API 묶음 =====
-const api = {
-  // 1) SSE 구독: /api/alerts/stream?userId=1
-  // - 서버가 보내는 커스텀 이벤트명:
-  //   • "connected" : 연결 성공
-  //   • "alert"     : 알림 도착 (payload: 아래 addAlertRow에서 쓰는 JSON)
-  // - handlers = { onOpen, onAlert, onError }
-  subscribeAlerts(userId, handlers = {}) {
-    const url = new URL(BASE_URL + '/api/alerts/stream');
-    url.searchParams.set('userId', userId);
-
-    // EventSource: 서버가 계속 "푸시"하는 전용 연결
-    const es = new EventSource(url);
-
-    es.addEventListener('connected', (e) => {
-      handlers.onOpen?.(e);
-    });
-    es.addEventListener('alert', (e) => {
-      try {
-        const data = JSON.parse(e.data);
-        handlers.onAlert?.(data);
-      } catch (err) {
-        console.error('alert payload JSON 파싱 실패', err, e.data);
-      }
-    });
-    es.onerror = (e) => {
-      handlers.onError?.(e);
-      // 네트워크가 잠깐 끊겨도 EventSource가 자동 재시도 함
-      // (원하면 es.close() 하고, setTimeout으로 재구독 로직을 직접 짜도 됨)
-    };
-
-    return es; // 필요 시 .close() 호출해서 구독 종료
-  },
-
-  // 2) 이상징후 알림 생성: POST /api/alerts/anomaly
-  //   body 예시: { userId:1, category:"ELECTRICITY", level:"WARN", title:"15분 급증 감지", at:null }
-  createAnomalyAlert(body) {
-    return _post('/api/alerts/anomaly', body);
-  },
-
-  // 3) 안 읽은 개수: GET /api/alerts/unread-count?userId=1
-  getUnreadCount(userId) {
-    return _get('/api/alerts/unread-count', { userId });
-  },
-};
-
-window.api = api; // 전역에서 window.api로 접근
-</script>
-<!-- app3.js (맨 아래쪽에 붙여 넣기) -->
-<script>
-// ★ 로그인 유저 아이디만 실제 값으로 바꿔 쓰세요
-const USER_ID = 1;
-
-/* ─────────────────────────
- * 알림 아이콘 뱃지(안 읽은 개수)
- * - 페이지 로드 시 1번만 조회해서 작게 표시
- * - HTML을 안 바꿔도 JS로 요소를 만들어서 붙입니다.
- * ───────────────────────── */
-async function paintBellUnread() {
-  try {
-    const count = await window.api.getUnreadCount(USER_ID);
-    const bell = document.querySelector('.top-actions a[aria-label="알림"]');
-    if (!bell) return;
-
-    // 기존 배지 제거
-    bell.querySelector('.bell-badge')?.remove();
-
-    if (count > 0) {
-      // 작은 동그라미 숫자
-      const badge = document.createElement('span');
-      badge.className = 'bell-badge';
-      Object.assign(badge.style, {
-        position: 'absolute',
-        top: '-4px',
-        right: '-4px',
-        minWidth: '16px',
-        height: '16px',
-        padding: '0 4px',
-        borderRadius: '999px',
-        background: '#ef4444',
-        color: '#fff',
-        fontSize: '11px',
-        lineHeight: '16px',
-        textAlign: 'center',
-        boxShadow: '0 1px 2px rgba(0,0,0,.2)',
-      });
-      badge.textContent = String(count);
-      // 부모(anchor)를 상대 위치로
-      bell.style.position = 'relative';
-      bell.appendChild(badge);
-    }
-  } catch (e) {
-    console.warn('안읽은 개수 조회 실패', e);
-  }
-}
-
-/* ─────────────────────────
- * 알림 목록 페이지: SSE 구독
- * - body[data-page="alerts"]에서만 실행
- * - 서버가 보내는 alert payload 예:
- *   { userId:1, category:"BILL", level:"INFO", title:"8월 전기요금 5% 증가", at:"2025-08-17T17:10:12.123" }
- * ───────────────────────── */
-function initAlertsSSE() {
-  if (document.body.dataset.page !== 'alerts') return;
-
-  const list = document.querySelector('.list');
-
-  function addAlertRow(a) {
-    // level → 배지 색 (디자인은 기존 클래스 재사용)
-    const levelToClass = {
-      INFO: 'info',
-      WARN: 'warn',
-      CRIT: 'warn',
-    };
-    const badgeClass = levelToClass[a.level] || 'info';
-    const when = a.at ? new Date(a.at).toLocaleString() : '방금 전';
-
-    // 기존 카드 스타일에 맞춰 article 생성 (HTML 구조는 그대로)
-    const item = document.createElement('article');
-    item.className = 'list-item';
-    item.innerHTML = `
-      <div class="icon">🔔</div>
-      <div>
-        <div><strong class="title">${escapeHtml(a.title || '알림')}</strong></div>
-        <div class="small">${when} · ${a.category || '알림'}</div>
-      </div>
-      <span class="badge ${badgeClass}">${a.level || 'INFO'}</span>
-    `;
-    list?.prepend(item); // 새 알림이 위로 오게
-  }
-
-  // XSS 방지용 아주 간단한 이스케이프
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, (c) => ({
-      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-    }[c]));
-  }
-
-  // 구독 시작
-  window.api.subscribeAlerts(USER_ID, {
-    onOpen: () => console.log('SSE 연결됨'),
-    onAlert: (payload) => {
-      addAlertRow(payload);
-      // 새 알림이 왔으니 아이콘 배지도 갱신
-      paintBellUnread();
-    },
-    onError: (e) => console.warn('SSE 오류', e),
-  });
-}
-
-/* 초기화 */
-document.addEventListener('DOMContentLoaded', () => {
-  paintBellUnread();
-  initAlertsSSE();
-});
-</script>
-<script src="api.js" defer></script>
-<script src="app3.js" defer></script>
 </body>
 </html>
