@@ -211,7 +211,7 @@
   <script>
     (function(){
       const { API_ORIGIN='', USER_ID } = window.__ENV;
-      const ELEC_COUNT = 3, GAS_COUNT = 3;
+      const ELEC_COUNT = 2, GAS_COUNT = 2;
       const $elec = document.getElementById("elecTips");
       const $gas  = document.getElementById("gasTips");
       if(!$elec || !$gas) return;
@@ -248,7 +248,7 @@
   <!-- 라인차트 (GET /api/ai/daily-line?userId=&date=YYYY-MM-DD), 30초 폴링 -->
   <script>
     (function(){
-      const { API_ORIGIN='', USER_ID } = window.__ENV;
+      const { API_ORIGIN='http://localhost:8084', USER_ID } = window.__ENV;
       const container = document.querySelector('.chart-line'); if(!container) return;
 
       function todayYMD(){ const d = new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
@@ -313,7 +313,8 @@
         container.appendChild(svg);
       }
 
-      async function fetchLine(date=todayYMD()){
+      async function fetchLine(){
+        const date ="2025-08-19";
         const url=`${API_ORIGIN}/api/ai/daily-line?userId=${encodeURIComponent(USER_ID)}&date=${encodeURIComponent(date)}`;
         try{
           const res=await fetch(url);

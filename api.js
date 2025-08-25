@@ -8,7 +8,7 @@
  *   - 성공(200)이면 JSON을 돌려주고, 오류면 메시지를 던집니다.
  */
 
-const BASE_URL = ''; // 예: 'http://localhost:8080'  (배포시 환경에 맞게 세팅)
+const BASE_URL = 'http://localhost:8084'; // 예: 'http://localhost:8080'  (배포시 환경에 맞게 세팅)
 
 /* YYYY-MM 형식인지 체크 */
 function assertPeriod(periodYm) {

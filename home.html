@@ -97,12 +97,14 @@
           </article>
         </div>
       </section>
-
-      <!-- 누적 막대차트 -->
-      <section class="panel">
+      
+      <!-- 누적 막대차트 --> 
+      <!-- <section class="panel">
         <h3>이번 달 전기/가스 누적</h3>
         <div id="chartBars" class="chart-line"></div>
       </section>
+      이부분 퍼블리싱 내용에 없돈 거라 제외
+    -->
 
       <!-- 절약 목표 -->
       <section class="goal-card" aria-label="절약 목표">
@@ -192,7 +194,7 @@
   <script>
     // 기본값(개발용). 운영에서는 env.js로 window.APP_CONF를 먼저 정의하거나, 아래를 빈 문자열("")로 바꾸세요.
     window.APP_CONF = window.APP_CONF || {};
-    if (!('API_ORIGIN' in window.APP_CONF)) window.APP_CONF.API_ORIGIN = "http://localhost:8080"; // 배포 프록시면 ""
+    if (!('API_ORIGIN' in window.APP_CONF)) window.APP_CONF.API_ORIGIN = "http://localhost:8084"; // 배포 프록시면 ""
     if (!('USER_ID' in window.APP_CONF))    window.APP_CONF.USER_ID    = 1;
   </script>
 

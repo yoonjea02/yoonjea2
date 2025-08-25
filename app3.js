@@ -94,6 +94,7 @@
   });
 
   // 2) 데이터 로더 (Mock) — 실제 API로 교체 가능
+  if  (USE_MOCK) {
   FeatureManager.register({
     id: "data-loader",
     async mount({ store }){
@@ -112,6 +113,7 @@
       }
     }
   });
+}
 
   // 3) 메인/대시보드 렌더러 (요약/도넛/막대)
   FeatureManager.register({

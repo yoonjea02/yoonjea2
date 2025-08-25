@@ -140,7 +140,7 @@
       const { API_ORIGIN='', USER_ID, AREA } = window.__ENV; // env.js 주입값
       const fmt = new Intl.NumberFormat('ko-KR');
       const ym = (()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"); })();
-
+      
       // 1) 월 목표 카드 GET /api/month-goal?userId=&ym=
       async function fetchMonthGoal(){
         try{
@@ -170,11 +170,12 @@
         e.preventDefault();
         const input = document.getElementById('goalInput');
         const val = Math.max(0, Number(input?.value||0));
+        const goalWon = Math.round(val / 1000) * 1000;
         try{
-          const res = await fetch(`${API_ORIGIN}/api/month-goal`, {
+          const res = await fetch(`${API_ORIGIN}/api/month-goal?userId=${encodeURIComponent(USER_ID)}&ym=${encodeURIComponent(ym)}&goalWon=${encodeURIComponent(goalWon)}`, {
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ userId: USER_ID, ym, goalWon: Math.round(val) })
+            body: JSON.stringify({ userId: USER_ID, periodYm: ym, goalWon: Math.round(val) })
           });
           if (res.status === 400) { alert('요청 형식 오류(기간/금액)'); return; }
           if (!res.ok) { alert('저장 실패'); return; }
@@ -188,7 +189,7 @@
           const res = await fetch(`${API_ORIGIN}/api/month-goal/reset`, {
             method:'POST',
             headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ userId: USER_ID, ym })
+            body: JSON.stringify({ userId: USER_ID, periodYm:ym })
           });
           if (!res.ok) { // 초기화 API가 없으면 UI만 초기화
             console.warn('reset api not ok, fallback to UI reset');
